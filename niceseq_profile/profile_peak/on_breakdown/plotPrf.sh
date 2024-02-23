@@ -1,4 +1,4 @@
-for f in *.gz
+for f in *.intersect.breakdown.2kdist.10bin.gz
 do
 
 	bn=`basename $f | sed "s/.gz//g"`
