@@ -24,7 +24,7 @@ tot_barcode['samples'] = tot_barcode.index.str.split('.').str[0]
 tot_barcode = tot_barcode.groupby('samples').sum()
 
 ## unique reads number
-uniq_stats = pd.read_csv('miapaca2_cr_bt2.stats.txt',sep='\t',index_col=0)
+uniq_stats = pd.read_csv('miapaca2_cr_bt2.clean.stats.txt',sep='\t',index_col=0)
 
 
 ## merge stats
@@ -103,8 +103,8 @@ targetsum_df = targetsum_df[targetsum_df.columns.drop('samples')]
 stats_df.index = stats_df.index.str.replace('Ac','ac')
 
 stats_df['target_barcode'] = targetsum_df
-stats_df['target_norm_hg'] = stats_df['uniq_hg'] / stats_df['target_barcode'] 
-stats_df['target_norm_hgec'] =  stats_df['uniq_all'] / stats_df['target_barcode']
+stats_df['target_norm_hg'] = stats_df['uniq_hg'] /  stats_df['target_barcode'] 
+stats_df['target_norm_hgec'] = stats_df['uniq_all']/ stats_df['target_barcode']
 
 stats_df = pd.concat([stats_df, sum_ab.T], axis=1)
 
