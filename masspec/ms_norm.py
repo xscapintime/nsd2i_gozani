@@ -49,3 +49,9 @@ plt.xticks(rotation=330,ha='left', va='top', rotation_mode='anchor')
 plt.tight_layout()
 plt.savefig('ms_fc.pdf')
 plt.close()
+
+
+## calculate scaling facotr for cut & run
+sf_df = msdat.loc[[row in marks for row in normed.index],~msdat.columns.str.contains('Rep3')]
+sf_df = sf_df.apply(lambda x: 1/(x/x.min()), axis=1)
+sf_df_long = sf_df.reset_index().melt(id_vars='index', var_name='Sample', value_name='Scaling Factor')
