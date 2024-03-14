@@ -55,7 +55,8 @@ plt.close()
 sf_df = msdat.loc[[row in marks for row in normed.index],~msdat.columns.str.contains('Rep3')]
 sf_df = sf_df.apply(lambda x: 1/(x/x.min()), axis=1)
 sf_df_long = sf_df.reset_index().melt(id_vars='index', var_name='Sample', value_name='Scaling Factor')
-sf_df_long['sample'] = sf_df_long['index'] + '_' + sf_df_long['Sample']
+sf_df_long['sample'] = sf_df_long['Sample'].str.replace('DMSO','Vehicle') + \
+    '_' + sf_df_long['index'].str.replace('ac','Ac')
 
 
-sf_df_long.to_csv('ms_scaling_factor.csv', index=False)
+sf_df_long.to_csv('ms_scaling_factor.txt', index=False, sep='\t', header=False)
