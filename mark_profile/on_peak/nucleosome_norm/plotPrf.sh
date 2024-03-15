@@ -3,7 +3,7 @@ do
 
 	bn=`basename $f | sed "s/.gz//g"`
 	target=`echo $bn | cut -d . -f 1,2`
-	samples=`gunzip -c $f | head -n 1 | cut -d "[" -f 11 | cut -d "]" -f 1 | sed 's/"//g' | sed "s/,/ /g" | sed "s/MiaPaCa2.//g" | sed "s/.cpm//g" | sed "s/.sorted//g"`
+	samples=`gunzip -c $f | head -n 1 | cut -d "[" -f 11 | cut -d "]" -f 1 | sed 's/"//g' | sed "s/,/ /g" | sed "s/MiaPaCa2.//g" | sed "s/.cpm//g" | sed "s/.sorted//g" | sed "s/.ms//g" | sed "s/.nuc//g"  |  tr -s ' ' '\n' | cut -d _ -f 1,2,3 | tr -s '\n' ' '`
 	
 	if [[ $target =~ "H3K4me1" ]]
 	then
