@@ -111,6 +111,10 @@ stats_df = pd.concat([stats_df, sum_ab.T], axis=1)
 stats_df.to_csv('barcode_stats_df.txt', sep='\t', header=True)
 
 targetsum_norm = stats_df[['target_norm_hg']]
+targetsum_norm = targetsum_norm.dropna()
+# targetsum_norm.index = targetsum_norm.index.str.replace('Ac','ac')
+
+targetsum_norm.to_csv('tarnuc_norm_hg.txt', sep='\t', header=False)
 
 
 #### NSD2i vs Control
