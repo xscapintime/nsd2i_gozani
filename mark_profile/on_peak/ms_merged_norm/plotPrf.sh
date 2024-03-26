@@ -1,4 +1,4 @@
-for f in NSD2i*.gz
+for f in *.gz
 do
 
 	bn=`basename $f | sed "s/.gz//g"`
