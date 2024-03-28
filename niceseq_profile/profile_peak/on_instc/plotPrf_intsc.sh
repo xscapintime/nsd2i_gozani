@@ -17,5 +17,9 @@ do
 
 	#fi
 
-	plotHeatmap -m $f -o $bn.png --yMax 0.7 --yMin 0 --zMax 1.1 --colorMap RdBu_r --samplesLabel $samples --regionsLabel NicE-seq
+	#plotHeatmap -m $f -o $bn.png --yMax 0.7 --yMin 0 --zMax 1.1 --colorMap RdBu_r --samplesLabel $samples --regionsLabel NicE-seq
+	
+#	plotProfile -m $f -o $bn.profile.png --numPlotsPerRow 3 --samplesLabel $samples --refPointLabel "NicE-seq peak" --plotWidth 5.5 \
+#--averageType mean --plotType se --regionsLabel $target --colors  "#5773CC" "#5773CC" "#5773CC" "#8B8989" "#8B8989" "#8B8989" \
+#--legendLocation upper-left
 done

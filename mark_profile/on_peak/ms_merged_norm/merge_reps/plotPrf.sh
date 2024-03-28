@@ -42,7 +42,7 @@ do
 	#plotHeatmap -m $f -o $target.png --colorMap RdBu_r --samplesLabel $samples --regionsLabel "$target CUT&RUN" --xAxisLabel "NicE-seq peak" --missingDataColor "#FFF6EB"  #--yMin $min --yMax $max --zMax $hmax
 
 	plotProfile -m $f -o $target.profile.png --numPlotsPerRow 3 --samplesLabel $samples --refPointLabel "NicE-seq peak" --plotWidth 5.5 \
---averageType mean --plotType se --regionsLabel $target --colors "#FFB900" "#FFB900" "#FFB900" "#5773CC" "#5773CC" "#5773CC" \
+--averageType mean --plotType se --regionsLabel $target --colors  "#5773CC" "#5773CC" "#5773CC" "#8B8989" "#8B8989" "#8B8989" \
 --legendLocation upper-left
 	
 
