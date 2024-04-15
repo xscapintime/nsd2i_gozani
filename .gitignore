@@ -4,6 +4,7 @@
 *.gz
 *.html
 *.bed
+*.bw
 *.txt
 *.pptx
 *.csv
