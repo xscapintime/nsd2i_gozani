@@ -19,4 +19,4 @@ gene_score = pd.concat(gene_list)
 
 gene_score = gene_score.groupby('connected_gene')['gene_score'].mean().sort_values(ascending=False)
 
-gene_score.to_csv('genehancer_score.csv', header=False, sep='\t')
+gene_score.to_csv('genehancer_score.txt', header=False, sep='\t')
