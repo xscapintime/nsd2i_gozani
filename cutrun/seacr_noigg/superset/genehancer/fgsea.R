@@ -58,20 +58,20 @@ for (g in 1:length(gmtlist)) {
         fgseaResTidy$leadingEdgechr[j] <- paste(fgseaResTidy$leadingEdge[[j]], collapse=', ')
     }
 
-    # write.table(fgseaResTidy[,-grep("leadingEdge$",colnames(fgseaResTidy))],
-    #     file = paste0(pathname,"_gsea.tsv"), quote = F, sep = "\t", row.names = F)
+    write.table(fgseaResTidy[,-grep("leadingEdge$",colnames(fgseaResTidy))],
+        file = paste0(pathname,"_gsea.tsv"), quote = F, sep = "\t", row.names = F)
 
 
-    # # plot top significant
-    # pdf(paste0(pathname, "_pathways.pdf"), width = 5, height = 3.5)
+    # plot top significant
+    pdf(paste0(pathname, "_pathways.pdf"), width = 5, height = 3.5)
 
-    # for (i in 1:nrow(fgseaResTidy[fgseaResTidy$pval < 0.005,])) {
-    #     path <- as.character(fgseaResTidy[order(fgseaResTidy$pval),][i,"pathway"])    
-    #     plt  <- plotEnrichment(pathways[[path]], ranks) + labs(subtitle=path)
-    #     print(plt)
-    # }
+    for (i in 1:nrow(fgseaResTidy[fgseaResTidy$pval < 0.005,])) {
+        path <- as.character(fgseaResTidy[order(fgseaResTidy$pval),][i,"pathway"])    
+        plt  <- plotEnrichment(pathways[[path]], ranks) + labs(subtitle=path)
+        print(plt)
+    }
 
-    # dev.off()
+    dev.off()
 
 
     # plot table
