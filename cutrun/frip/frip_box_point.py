@@ -17,6 +17,7 @@ stats['prop'] = stats['inpeak'] / stats['all']
 for m in stats['mark'].unique():
     dat = stats.loc[stats['mark']==m, ] 
 
+    # bar/countplot
     g = sns.catplot(data=dat, x='drp', y='prop', hue='day', col='trt', kind='bar',\
                     legend=False, height=5, aspect=.6, dodge=False)
     # g.set(title=m)
@@ -29,6 +30,15 @@ for m in stats['mark'].unique():
     plt.savefig(f'{m}_seacr_frip.pdf')
     plt.close()
 
-
-
+    
+    # pointplot
+    plt.figure(figsize=(4,5))
+    g = sns.pointplot(data=dat, x="day", y="prop", hue="trt", dodge=True,
+                  palette=["#5773CC","#8B8989" ], linestyles=["-", "--"])
+    g.get_legend().set_title("")
+    g.set_title(m)
+    g.set(xlabel="", ylabel="FRiP")
+    plt.tight_layout()
+    plt.savefig(f'{m}_seacr_frip_point.pdf')
+    plt.close()
 
