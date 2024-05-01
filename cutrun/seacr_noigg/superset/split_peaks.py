@@ -19,21 +19,22 @@ for f in files:
     set.to_csv(f'{sam}.binarycode.bed', sep='\t', header=False, index=False)
 
     code_order = ['111111',
-                  '100000', '110000', '111000', '110100', '111110', '111100',
-                  '000111', '100111', '110111', '000110', '000100', '100110',
-                  '010000', '011000', '001000',
-                  '000010', '000011', '000001',
+                  '100000', '110000', '111000', '110100', '111110', '111100', '010000', '011000', '001000',
+                  '000111', '100111', '110111', '000110', '000100', '100110', '000010', '000011', '000001',
+                #   '010000', '011000', '001000',
+                #   '000010', '000011', '000001',
                   '100100', '110110', '101101', '001001', '011011', '010010']
     plot_dat = set[set.binary_code.isin(code_order)]
-    plot_dat['group'] = np.where(plot_dat.binary_code.isin(['100000', '110000', '111000', '110100', '111110', '111100']), 'gain',
-                                 np.where(plot_dat.binary_code.isin(['000111', '100111', '110111', '000110', '000100', '100110']), 'loss',
-                                 np.where(plot_dat.binary_code.isin(['010000', '011000', '001000', '000010', '000011', '000001']), 'unique',
-                                 np.where(plot_dat.binary_code.isin(['100100', '110110', '101101', '001001', '011011', '010010']), 'no change', 'shared'))))
+    plot_dat['group'] = np.where(plot_dat.binary_code.isin(['100000', '110000', '111000', '110100', '111110', '111100', '010000', '011000', '001000']), 'gain',
+                                 np.where(plot_dat.binary_code.isin(['000111', '100111', '110111', '000110', '000100', '100110', '000010', '000011', '000001']), 'loss',
+                                #  np.where(plot_dat.binary_code.isin(['010000', '011000', '001000', '000010', '000011', '000001']), 'unique',
+                                 np.where(plot_dat.binary_code.isin(['100100', '110110', '101101', '001001', '011011', '010010']), 'no change', 'shared')))#)
 
     plt.figure(figsize=(5,6))
     sns.countplot(data=plot_dat, y='binary_code', order=code_order,
                     hue=plot_dat['group'], dodge=False,
-                    hue_order=['shared', 'gain', 'loss', 'unique', 'no change'])
+                    # hue_order=['shared', 'gain', 'loss', 'unique', 'no change'])
+                    hue_order=['shared', 'gain', 'loss', 'no change'])
     plt.legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
     plt.tight_layout()
     plt.savefig(f'{sam}.binarycode.pdf')
