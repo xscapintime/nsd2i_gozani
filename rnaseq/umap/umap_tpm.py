@@ -9,6 +9,8 @@ from matplotlib import pyplot as plt
 import matplotlib.font_manager
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
+from Ensembl_converter import EnsemblConverter
+
 
 
 plt.style.use('seaborn-poster')
@@ -18,10 +20,17 @@ matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = 'Arial'
 matplotlib.rcParams.update({'font.size': 6})
 
+## load ensemble id to symbol matching table
+ensembl_syb = pd.read_csv('human_ensembl_syb.tsv', header=0, index_col=None, sep='\t')
+ensembl_syb = dict(zip(ensembl_syb['ensembl_gene_id'], ensembl_syb['hgnc_symbol']))
+
 
 ## load tpm table
 tpm = pd.read_csv('../tpm/tximport-tpm.csv', header=0, index_col=0)
 
+## change index to gene symbol
+tpm = tpm.set_index(tpm.index.map(ensembl_syb))
+tpm = tpm[tpm.index.notnull()]
 
 ## filter lowly expressed transcripts
 # half of the samples should have TPM > 1
@@ -87,7 +96,7 @@ for g in groups:
     
     # plt.show()
     plt.tight_layout()
-    plt.savefig(f'umap_{g}_log10tpm.pdf')
+    plt.savefig(f'umap_{g}_log10tpm.new.pdf')
     plt.close()
 
 
@@ -122,5 +131,22 @@ for g in groups:
     
     # plt.show()
     plt.tight_layout()
-    plt.savefig(f'umap_{g}_zscore.pdf')
+    plt.savefig(f'umap_{g}_zscore.new.pdf')
     plt.close()
+
+
+
+## convert ensemble id to gene symbol
+#### this is way too slow
+#converter = EnsemblConverter()
+#symbolids = converter.convert_ids(embedding.index)
+####
+
+
+## color with K37ac levels of enahcners of these genes
+ac_hancer = pd.read_csv('../../mark_profile/signal_on_enhancer/msnormedct_on_enhancer.txt', header=0, index_col=None, sep='\t')
+
+# group by gene
+ave_bygene = ac_hancer.iloc[:,4:].groupby('connected_gene').mean()
+
+# 
