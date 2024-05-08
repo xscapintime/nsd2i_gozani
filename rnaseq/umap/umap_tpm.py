@@ -104,9 +104,9 @@ for g in groups:
 
 ## color by zscore
 # 0 as center
-vcenter = 1
+vcenter = 0
 # vmin, vmax = fcstat.iloc[:,:171].min().min(), fcstat.iloc[:,:171].max().max()
-vmin, vmax = (0,2)
+vmin, vmax = (-2,2)
 normalize = mcolors.TwoSlopeNorm(vcenter=vcenter, vmin=vmin, vmax=vmax)
 
 groups = tpm_zscore.columns
@@ -149,4 +149,65 @@ ac_hancer = pd.read_csv('../../mark_profile/signal_on_enhancer/msnormedct_on_enh
 # group by gene
 ave_bygene = ac_hancer.iloc[:,4:].groupby('connected_gene').mean()
 
-# 
+# mean of replicates
+ave_bygene_mean = ave_bygene.groupby(ave_bygene.columns.str.replace('_Rep1|_Rep2','', regex=True), axis=1).mean()
+
+
+# keep only genes in the embedding
+plot_dat = embedding.merge(ave_bygene_mean, left_index=True, right_index=True, how='inner')
+
+
+
+## unfinished
+sns.scatterplot(x='UMAP1', y='UMAP2', data=plot_dat,
+                    hue=np.log2(plot_dat['NSD2i_D5_H3K27Ac']+0.1).to_list(),
+                    linewidth=0, s=3, alpha=.7, edgecolor=None,
+                    palette="viridis")
+
+### did not show patterns'
+
+
+
+
+
+# ### if embed base on N/C
+# ## does not work well
+# tpm_normed = np.log2(np.divide(*(tpm.iloc[:,np.where(tpm.columns.str.contains('_N'))[0]]+1).\
+#                    align((tpm.iloc[:,np.where(tpm.columns.str.contains('_C'))[0]]+1), axis=0)))
+
+# embedding_norm = pd.DataFrame(umap.fit_transform(tpm_normed), columns = ['UMAP1','UMAP2'])
+# embedding_norm.index = tpm.index
+
+# umap = UMAP(n_neighbors=10, min_dist=0)
+
+# embedding_norm = pd.DataFrame(umap.fit_transform(tpm_normed), columns = ['UMAP1','UMAP2'])
+# embedding_norm.index = tpm.index
+
+
+# vcenter = 0
+# # vmin, vmax = fcstat.iloc[:,:171].min().min(), fcstat.iloc[:,:171].max().max()
+# vmin, vmax = (-2,2)
+# normalize = mcolors.TwoSlopeNorm(vcenter=vcenter, vmin=vmin, vmax=vmax)
+
+# groups = tpm_zscore.columns
+
+# for g in groups:
+#     plt.figure(figsize=(5.5,4))
+
+#     ax = sns.scatterplot(x='UMAP1', y='UMAP2', data=embedding_norm,
+#                     hue=tpm_zscore[g].to_list(),
+#                     linewidth=0, s=3, alpha=.7, edgecolor=None,
+#                     palette="viridis",
+#                     hue_norm=normalize)
+    
+    
+#     # norm = plt.Normalize(fcstat.iloc[:,:171].min().min(), fcstat.iloc[:,:171].max().max())
+#     sm = plt.cm.ScalarMappable(cmap="viridis", norm=normalize)
+#     sm.set_array([])
+    
+#     # Remove the legend and add a colorbar
+#     ax.get_legend().remove()
+#     ax.figure.colorbar(sm)
+    
+#     # plt.show()
+#     plt.tight_layout()
