@@ -19,10 +19,22 @@ ac_hancer = pd.read_csv('../../mark_profile/signal_on_enhancer/msnormedct_on_enh
 # group by gene
 ave_bygene = ac_hancer.iloc[:,4:].groupby('connected_gene').mean()
 
+
+# NSD2i/CK
+ac_normed = np.log2(np.divide(*(ave_bygene.iloc[:,np.where(ave_bygene.columns.str.contains('NSD2i'))[0]]+1).\
+                   align((ave_bygene.iloc[:,np.where(ave_bygene.columns.str.contains('Vehicle'))[0]]+1), axis=0)))
+
+
+
 # wide to long
 ave_bygene_long = ave_bygene.stack().reset_index()
 ave_bygene_long.columns = ['connected_gene','sample','ctsignal']
 ave_bygene_long['group'] = ave_bygene_long['sample'].str.replace('_Rep1|_Rep2', '', regex=True)
+
+
+ac_normed_long =  ac_normed.stack().reset_index()
+ac_normed_long.columns = ['connected_gene','sample','log2fc']
+ac_normed_long['group'] = ac_normed_long['sample'].str.replace('_Rep1|_Rep2', '', regex=True)
 
 
 ## boxplot for kras pathway geens
@@ -61,10 +73,8 @@ kras_dn = ['ABCB11','ABCG4','ACTC1','ADRA2C','AKR1B10','ALOX12B','AMBN','ARHGDIG
             'ZC2HC1C','ZNF112']
 
 
-# plot
-
-
-
+#### plot #####
+## mass spec normed signal
 
 for path in [kras_up,kras_dn]:
 
@@ -92,4 +102,63 @@ for path in [kras_up,kras_dn]:
     
         plt.tight_layout()
         plt.savefig(f'{mark}_enhancer_{pathname}.pdf')
+        plt.close()
+
+
+
+## break y axis boxplot
+
+f, (ax_top, ax_bottom) = plt.subplots(ncols=1, nrows=2, sharex=True, gridspec_kw={'hspace':0.05})
+sns.boxplot(x="group", y="ctsignal", data=plot_dat, ax=ax_top)
+sns.boxplot(x="group", y="ctsignal", data=plot_dat, ax=ax_bottom)
+ax_top.set_ylim(bottom=10)   # those limits are fake
+ax_bottom.set_ylim(-0.5,5)
+
+sns.despine(ax=ax_bottom)
+sns.despine(ax=ax_top, bottom=True)
+
+ax = ax_top
+d = .015  # how big to make the diagonal lines in axes coordinates
+# arguments to pass to plot, just so we don't keep repeating them
+kwargs = dict(transform=ax.transAxes, color='k', clip_on=False)
+ax.plot((-d, +d), (-d, +d), **kwargs)        # top-left diagonal
+
+ax2 = ax_bottom
+kwargs.update(transform=ax2.transAxes)  # switch to the bottom axes
+ax2.plot((-d, +d), (1 - d, 1 + d), **kwargs)  # bottom-left diagonal
+
+#remove one of the legend
+# ax_bottom.legend_.remove()
+plt.show()
+
+
+
+## NSD2i/CK logfc
+for path in [kras_up,kras_dn]:
+
+    pathname = 'UP' if path == kras_up else 'DN'
+
+    for mark in ['H3K27Ac','H3K36me2', 'H3K27me3']:
+
+        plot_dat = ac_normed_long[(ac_normed_long['connected_gene'].isin(path)) & \
+                                         (ac_normed_long['connected_gene'].isin(path)) & \
+                                            (ac_normed_long['group'].str.contains(mark))]
+    
+    
+        plot_dat['group'] = pd.Categorical(plot_dat['group'],
+                                           categories=np.unique(plot_dat.group),
+                                           ordered=True)
+    
+    
+        plt.figure(figsize=(10,8), dpi=300)
+        g = sns.boxplot(x='group', y='log2fc',
+                    data=plot_dat,
+                    showfliers=True, width=0.7, linewidth=2, saturation=0.8)
+        plt.xlabel('')
+        plt.ylabel(f'Mass Spec normalized {mark} on enahncers')
+        plt.xticks(rotation=330, ha='left', va='top', rotation_mode='anchor')
+        plt.title(f'HALLMARK_KRAS_SIGNALING_{pathname}')
+    
+        plt.tight_layout()
+        plt.savefig(f'{mark}_enhancer_{pathname}_log2.pdf')
         plt.close()
