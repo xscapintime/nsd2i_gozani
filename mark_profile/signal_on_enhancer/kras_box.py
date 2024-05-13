@@ -24,6 +24,8 @@ ave_bygene = ac_hancer.iloc[:,4:].groupby('connected_gene').mean()
 ac_normed = np.log2(np.divide(*(ave_bygene.iloc[:,np.where(ave_bygene.columns.str.contains('NSD2i'))[0]]+1).\
                    align((ave_bygene.iloc[:,np.where(ave_bygene.columns.str.contains('Vehicle'))[0]]+1), axis=0)))
 
+# export
+ac_normed.to_csv('ct_enhancer_normed.txt', sep='\t', header=True, index=True)
 
 
 # wide to long
@@ -35,6 +37,7 @@ ave_bygene_long['group'] = ave_bygene_long['sample'].str.replace('_Rep1|_Rep2', 
 ac_normed_long =  ac_normed.stack().reset_index()
 ac_normed_long.columns = ['connected_gene','sample','log2fc']
 ac_normed_long['group'] = ac_normed_long['sample'].str.replace('_Rep1|_Rep2', '', regex=True)
+
 
 
 ## boxplot for kras pathway geens
@@ -83,7 +86,7 @@ for path in [kras_up,kras_dn]:
     for mark in ['H3K27Ac','H3K36me2', 'H3K27me3']:
 
         plot_dat = ave_bygene_long[(ave_bygene_long['connected_gene'].isin(path)) & \
-                                         (ave_bygene_long['connected_gene'].isin(path)) & (ave_bygene_long['group'].str.contains(mark))]
+                                    (ave_bygene_long['group'].str.contains(mark))]
     
     
         plot_dat['group'] = pd.Categorical(plot_dat['group'],
@@ -141,8 +144,7 @@ for path in [kras_up,kras_dn]:
     for mark in ['H3K27Ac','H3K36me2', 'H3K27me3']:
 
         plot_dat = ac_normed_long[(ac_normed_long['connected_gene'].isin(path)) & \
-                                         (ac_normed_long['connected_gene'].isin(path)) & \
-                                            (ac_normed_long['group'].str.contains(mark))]
+                                    (ac_normed_long['group'].str.contains(mark))]
     
     
         plot_dat['group'] = pd.Categorical(plot_dat['group'],
