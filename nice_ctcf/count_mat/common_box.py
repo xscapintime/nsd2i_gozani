@@ -27,3 +27,18 @@ for f in nice_files:
     mat = mat.loc[:,mat.columns.str.replace('Day','D').str.contains(day)]
 
     nice_mats.append(mat)
+
+
+# agg nice and ctcf
+for n, c in zip(nice_mats, ctcf_mats):
+    n = n.stack().reset_index()
+    # n.level_1 = n.level_1.str.replace('Day','D').str.replace('-full','').str.replace('_rep','_Rep')
+    # n.level_1 = n.level_1.str.split('_').apply(lambda x: '_'.join([x[1], x[0], x[2], 'NiCE']))
+
+    c = c.stack().reset_index()
+
+    # merge
+    merged = pd.merge(n, c, on=['Geneid'])
+
+
+
