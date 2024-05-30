@@ -38,8 +38,52 @@ ac_normed.loc[least_k36].to_csv('ct_enhancer_normed_leastk36me2.txt', header=Tru
 
 
 # filter RNA gene, lncRNA, and pseudogene
-ac_normed_norna = ac_normed.loc[least_k36].loc[~ac_normed['connected_gene'].str.contains('lnc|HSALNG|piR-|LOC|ENSG|RF00|LINC0|CM0')]
+ac_normed_norna = ac_normed.loc[least_k36].loc[~ac_normed['connected_gene'].str.contains('lnc|HSALNG|piR|LOC|ENSG|RF00|LINC0|CM0|MIR|RNU|NONHSA|AS1|LINC')]
 
 ac_normed_norna.to_csv('ct_enhancer_normed_leastk36me2_norna.txt', header=True, index=False, sep='\t')
 
 
+## top genes losing k36me2 at enhancers
+topgenes = ac_normed_norna.loc[ac_normed_norna.loc[:, ac_normed_norna.columns.str.contains('H3K36me2')].\
+            apply(lambda x: np.mean(x), axis=1).sort_values(ascending=True).index].head(100)['connected_gene']
+
+# count enhancer number
+topg_n_enhancer = ac_normed_norna.loc[ac_normed_norna['connected_gene'].isin(topgenes)].groupby('connected_gene')['genehancer_id'].nunique().sort_values(ascending=False).to_dict()
+
+
+# plot data
+
+plot_dat = ac_normed_norna.loc[ac_normed_norna['connected_gene'].isin(list(topg_n_enhancer.keys())[0:20])].melt(id_vars=["genehancer_id", "connected_gene"], var_name="original_col", value_name="value")
+plot_dat['day'] = plot_dat['original_col'].str.split('_').str[1]
+plot_dat['rep'] = plot_dat['original_col'].str.split('_').str[2]
+plot_dat['mark'] = plot_dat['original_col'].str.split('_').str[3]
+
+
+plot_dat['connected_gene'] = pd.Categorical(plot_dat['connected_gene'],\
+                        categories=plot_dat.loc[plot_dat.mark == 'H3K36me2'].groupby('connected_gene').\
+                            mean('value').sort_values(by='value').index)
+
+
+## plot
+
+g = sns.catplot(data=plot_dat, kind="box",palette="pastel",
+            x="connected_gene", y="value", row="mark", col='day', aspect=1.4, 
+            showfliers=False, linewidth=1.2)
+
+#https://stackoverflow.com/questions/67309730/how-to-overlay-a-scatterplot-on-top-of-boxplot-with-sns-catplot
+g.map_dataframe(sns.stripplot, x="connected_gene", y="value", 
+                palette=["#404040"],
+                alpha=0.6,dodge=True,
+                size=3)
+# g.set_xticklabels(rotation=90,rotation_mode='anchor',ha='left', va='top')
+for ax in g.axes.flat:
+    ax.axhline(0, color='black', linestyle='--', linewidth=0.5)
+    
+    for label in ax.get_xticklabels():
+        label.set_rotation(90)
+        label.set_horizontalalignment('center')
+
+g.axes[1, 0].set_ylabel('log2(NSD2i/Vehicle)') 
+
+plt.savefig('enhancer_normed_leastk36me2_topgenes.pdf', bbox_inches='tight')
+plt.close()
