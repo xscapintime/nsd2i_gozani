@@ -87,3 +87,110 @@ g.axes[1, 0].set_ylabel('log2(NSD2i/Vehicle)')
 
 plt.savefig('enhancer_normed_leastk36me2_topgenes.pdf', bbox_inches='tight')
 plt.close()
+
+
+## add gene expression
+## load ensemble id to symbol matching table
+ensembl_syb = pd.read_csv('../../rnaseq/umap/human_ensembl_syb.tsv', header=0, index_col=None, sep='\t')
+ensembl_syb = dict(zip(ensembl_syb['ensembl_gene_id'], ensembl_syb['hgnc_symbol']))
+
+## load tpm table
+tpm = pd.read_csv('../../rnaseq/tpm/tximport-tpm.csv', header=0, index_col=0)
+
+## change index to gene symbol
+tpm = tpm.set_index(tpm.index.map(ensembl_syb))
+tpm = tpm[tpm.index.notnull()]
+
+## log2tpm
+tpm_normed = np.log2(np.divide(*(tpm.iloc[:,np.where(tpm.columns.str.contains('_N'))[0]]+1).\
+                    align((tpm.iloc[:,np.where(tpm.columns.str.contains('_C'))[0]]+1), axis=0)))
+
+tpm_normed.columns = tpm_normed.columns.str.replace('N', 'Rep').str.replace('Day', 'D') + '_log2tpm'
+tpm_long = tpm_normed.stack().reset_index()
+tpm_long['day'] = tpm_long['level_1'].str.split('_').str[0]
+tpm_long['rep'] = tpm_long['level_1'].str.split('_').str[1]
+
+tpm_long.columns = ['connected_gene', 'original_col', 'value', 'day', 'rep']
+
+
+tpm_long.connected_gene in plot_dat.connected_gene
+
+plot_dat_expr = pd.merge(plot_dat, tpm_long.loc[tpm_long['connected_gene'].isin(list(topg_n_enhancer.keys())[0:20])],
+         on=['connected_gene', 'day', 'rep'], how='right')
+
+
+## plot
+g = sns.catplot(data=plot_dat_expr, kind="box",palette="pastel",
+            x="connected_gene", y="value_x", row="mark", col='day', aspect=1.4, 
+            showfliers=False, linewidth=1.2)
+
+#https://stackoverflow.com/questions/67309730/how-to-overlay-a-scatterplot-on-top-of-boxplot-with-sns-catplot
+g.map_dataframe(sns.stripplot, x="connected_gene", y="value_x", 
+                palette=["#404040"],
+                alpha=0.6,dodge=True,
+                size=3)
+
+g.map_dataframe(sns.stripplot, x="connected_gene", y="value_y", 
+                palette=["#CD5555"],
+                alpha=0.5,dodge=True,
+                s=5, marker="D",
+                jitter=False)
+
+for ax in g.axes.flat:
+    ax.axhline(0, color='black', linestyle='--', linewidth=0.5)
+    
+    for label in ax.get_xticklabels():
+        label.set_rotation(90)
+        label.set_horizontalalignment('center')
+
+g.axes[1, 0].set_ylabel('log2(NSD2i/Vehicle)') 
+
+plt.savefig('mostenhancer_leastk36me2_topgenes_wtpm.pdf', bbox_inches='tight')
+plt.close()
+
+
+
+
+## plot genes lost most k36me2
+toplostgenes = ac_normed_norna.loc[ac_normed_norna['connected_gene'].isin(topgenes[:30])].\
+                            melt(id_vars=["genehancer_id", "connected_gene"], var_name="original_col", value_name="value")
+
+toplostgenes['day'] = toplostgenes['original_col'].str.split('_').str[1]
+toplostgenes['rep'] = toplostgenes['original_col'].str.split('_').str[2]
+toplostgenes['mark'] = toplostgenes['original_col'].str.split('_').str[3]
+
+
+toploset_expr = pd.merge(toplostgenes,\
+                         tpm_long.loc[tpm_long['connected_gene'].isin(topgenes[:30])],\
+                         on=['connected_gene', 'day', 'rep'], how='right')
+toploset_expr['connected_gene'] = pd.Categorical(toploset_expr['connected_gene'], categories=topgenes[:30])
+
+
+# plot
+g = sns.catplot(data=toploset_expr, kind="box",palette="pastel",
+            x="connected_gene", y="value_x", row="mark", col='day', aspect=1.4, 
+            showfliers=False, linewidth=1.2)
+
+#https://stackoverflow.com/questions/67309730/how-to-overlay-a-scatterplot-on-top-of-boxplot-with-sns-catplot
+g.map_dataframe(sns.stripplot, x="connected_gene", y="value_x", 
+                palette=["#404040"],
+                alpha=0.6,dodge=True,
+                size=3)
+
+g.map_dataframe(sns.stripplot, x="connected_gene", y="value_y", 
+                palette=["#CD5555"],
+                alpha=0.5,dodge=True,
+                s=5, marker="D",
+                jitter=False)
+
+for ax in g.axes.flat:
+    ax.axhline(0, color='black', linestyle='--', linewidth=0.5)
+    
+    for label in ax.get_xticklabels():
+        label.set_rotation(90)
+        label.set_horizontalalignment('center')
+
+g.axes[1, 0].set_ylabel('log2(NSD2i/Vehicle)')
+
+plt.savefig('leastk36me2_topgenes_wtpm.pdf', bbox_inches='tight')
+plt.close()
