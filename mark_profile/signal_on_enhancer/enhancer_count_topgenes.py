@@ -113,8 +113,6 @@ tpm_long['rep'] = tpm_long['level_1'].str.split('_').str[1]
 tpm_long.columns = ['connected_gene', 'original_col', 'value', 'day', 'rep']
 
 
-tpm_long.connected_gene in plot_dat.connected_gene
-
 plot_dat_expr = pd.merge(plot_dat, tpm_long.loc[tpm_long['connected_gene'].isin(list(topg_n_enhancer.keys())[0:20])],
          on=['connected_gene', 'day', 'rep'], how='right')
 

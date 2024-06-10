@@ -21,8 +21,16 @@ ave_bygene = ac_hancer.iloc[:,4:].groupby('connected_gene').mean()
 
 
 # NSD2i/CK
-ac_normed = np.log2(np.divide(*(ave_bygene.iloc[:,np.where(ave_bygene.columns.str.contains('NSD2i'))[0]]+1).\
-                   align((ave_bygene.iloc[:,np.where(ave_bygene.columns.str.contains('Vehicle'))[0]]+1), axis=0)))
+# ac_normed = np.log2(np.divide(*(ave_bygene.iloc[:,np.where(ave_bygene.columns.str.contains('NSD2i'))[0]]+1).\
+#                    align((ave_bygene.iloc[:,np.where(ave_bygene.columns.str.contains('Vehicle'))[0]]+1), axis=0)))
+
+nsd2i = ac_hancer[sorted(ac_hancer.columns[ac_hancer.columns.str.contains('NSD2i')])]
+ck =  ac_hancer[sorted(ac_hancer.columns[ac_hancer.columns.str.contains('Vehicle')])]
+ac_normed = np.log2((nsd2i+1)/(ck+1).values)
+ac_normed.index = ac_hancer['connected_gene']
+
+# remove rows that all the elements are zero
+ac_normed = ac_normed[np.sum(ac_normed,axis=1) > 0]
 
 # export
 ac_normed.to_csv('ct_enhancer_normed.txt', sep='\t', header=True, index=True)
