@@ -59,7 +59,25 @@ for i in range(krasdn_d1ctrl.shape[0]):
     sorted_indices = np.argsort(distances)
 
     # keep the 5 rows with the smallest distances
-    closest_indices = [idx for idx in sorted_indices if idx != i][0:5]
+    closest_indices = [idx for idx in sorted_indices][1:6]
     ctrl_sets.append(closest_indices)
 
 
+
+## convert index to genes
+ctrl_set_genes = [all_d1ctrl.index[idx].to_list() for idx in ctrl_sets]
+
+new_lists = []
+for sublist in ctrl_set_genes:
+    new_list = []
+    for i in range(len(sublist)):
+        if i % 2 == 0:
+            new_list.append(sublist[i])
+    new_lists.append(new_list)
+
+ctrl_genes = pd.DataFrame(ctrl_set_genes)
+ctrl_genes = ctrl_genes.drop_duplicates()
+
+ctrl_genes.columns = ['group1','group2','group3','group4','group5']
+
+ctrl_genes.to_csv('ctrl_genes.csv',index=False)
