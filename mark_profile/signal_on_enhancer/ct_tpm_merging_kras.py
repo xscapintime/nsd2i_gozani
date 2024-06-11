@@ -36,14 +36,12 @@ tpm_normed = np.log2(np.divide(*(tpm.iloc[:,np.where(tpm.columns.str.contains('_
 
 tpm_normed.columns = tpm_normed.columns.str.replace('N', 'Rep').str.replace('Day', 'D') + '_log2tpm'
 
-
 # merge
 # CT value on enhancers are multiple, so TPM would be dupicated
 tpm_enhancersig = tpm_normed.merge(ct_enhancer_normed, left_index=True, right_index=True, how='inner')
 
 
 ## rank genes by k36me2 loss and low expression
-
 tpm_enhancersig['avetpm'] = tpm_enhancersig.loc[:, tpm_enhancersig.columns.str.contains('log2tpm')].\
             apply(lambda x: np.mean(x), axis=1)
 tpm_enhancersig['avek36me2'] = tpm_enhancersig.loc[:, tpm_enhancersig.columns.str.contains('K36me2')].\
@@ -153,13 +151,15 @@ kras_plot_dat['mark'] = kras_plot_dat['mark'].str.split('_').str[2]
 
 tpmcol  = kras_plot_dat[kras_plot_dat['mark'] == 'log2tpm']
 kras_plot_dat = kras_plot_dat[kras_plot_dat['mark'] != 'log2tpm']
-kras_plot_dat = pd.merge(kras_plot_dat, tpmcol, on=['connected_gene', 'day', 'rep'], how='left')
+kras_plot_dat = pd.merge(kras_plot_dat, tpmcol, on=['connected_gene', 'day'], how='left')
 
 
 kras_plot_dat['connected_gene'] = pd.Categorical(kras_plot_dat['connected_gene'],\
                                                  categories=krasdn_ordered[krasdn_ordered.isin(kras_plot_dat['connected_gene'])],
                                                  ordered=True)
-krasdn_20 =  krasdn_ordered[krasdn_ordered.isin(kras_plot_dat['connected_gene'])][:20]
+kras_plot_dat = kras_plot_dat.drop_duplicates()
+
+krasdn_20 = krasdn_ordered[krasdn_ordered.isin(kras_plot_dat['connected_gene'])][:20]
 
 
 # plot
@@ -179,7 +179,7 @@ g.map_dataframe(sns.stripplot, x="connected_gene", y="value_x",
 g.map_dataframe(sns.stripplot, x="connected_gene", y="value_y", 
                 palette=["#CD5555"],
                 alpha=0.5,dodge=True,
-                s=5, marker="D",
+                s=4, marker="D",
                 jitter=False)
 
 for ax in g.axes.flat:
@@ -198,11 +198,7 @@ plt.close()
 
 ### load control gene sets
 kras_ctrl_sets = pd.read_csv('../../kras_vsctrl/ctrlsets_from_allnormedtpm.csv')
-
-
 kras_plot_dat = kras_plot_dat.assign(geneset='krasdn')
-
-
 
 ctrl_sets = {}
 
@@ -220,9 +216,9 @@ for i in range(1, 6):
 
     tpmcol = df[df['mark'] == 'log2tpm']
     df = df[df['mark'] != 'log2tpm']
-    df = pd.merge(df, tpmcol, on=['connected_gene', 'day', 'rep'], how='left')
+    df = pd.merge(df, tpmcol, on=['connected_gene', 'day'], how='left')
 
-    df = df.assign(set=key)
+    df = df.assign(geneset=key)
 
     # Assign the DataFrame to the dictionary
     ctrl_sets[key] = df
@@ -237,9 +233,20 @@ ctrl5 = ctrl_sets['ctrl5']
 
 ## concat all
 kras_ctrl_ct_tmp = pd.concat([kras_plot_dat, ctrl1, ctrl2, ctrl3, ctrl4, ctrl5], axis=0)
+kras_ctrl_ct_tmp = kras_ctrl_ct_tmp.drop_duplicates()
 
 
 ## plot grid distribution
+g = sns.catplot(data=kras_ctrl_ct_tmp, y='value_x', x='geneset', kind='violin',
+            palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
+            col='day', row='mark_x', aspect=1.4,)
+for ax in g.axes.flat:
+    ax.axhline(0, color='black', linestyle='--', linewidth=0.5)
+
+g.set_axis_labels("Genesets", "log2(NSD2i/Vehicle)") 
+
+plt.savefig('kras_ctrl_ctonenhancer.pdf')
+plt.close()
 
 
 
