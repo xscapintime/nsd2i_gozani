@@ -81,3 +81,6 @@ ctrl_genes = ctrl_genes.drop_duplicates()
 ctrl_genes.columns = ['group1','group2','group3','group4','group5']
 
 ctrl_genes.to_csv('ctrl_genes.csv',index=False)
+
+
+## box plot of kras dn vs 5 control sets
