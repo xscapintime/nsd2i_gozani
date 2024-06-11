@@ -193,3 +193,53 @@ g.axes[1, 0].set_ylabel('log2(NSD2i/Vehicle)')
 
 plt.savefig('topdn20_krasdn.pdf', bbox_inches='tight')
 plt.close()
+
+
+
+### load control gene sets
+kras_ctrl_sets = pd.read_csv('../../kras_vsctrl/ctrlsets_from_allnormedtpm.csv')
+
+
+kras_plot_dat = kras_plot_dat.assign(geneset='krasdn')
+
+
+
+ctrl_sets = {}
+
+# Loop to create each DataFrame
+for i in range(1, 6):
+    key = f'ctrl{i}'
+    
+    # Use .isin to filter and stack, reset index for the desired operation
+    df = tpm_enhancersig.loc[kras_ctrl_sets[kras_ctrl_sets.iloc[:, i-1].isin(tpm_enhancersig.index)].iloc[:, i-1]]\
+        .stack().reset_index()
+    df.columns = ['connected_gene', 'mark', 'value']
+    df['day'] = df['mark'].str.split('_').str[0]
+    df['rep'] = df['mark'].str.split('_').str[1]
+    df['mark'] = df['mark'].str.split('_').str[2]
+
+    tpmcol = df[df['mark'] == 'log2tpm']
+    df = df[df['mark'] != 'log2tpm']
+    df = pd.merge(df, tpmcol, on=['connected_gene', 'day', 'rep'], how='left')
+
+    df = df.assign(set=key)
+
+    # Assign the DataFrame to the dictionary
+    ctrl_sets[key] = df
+
+
+ctrl1 = ctrl_sets['ctrl1']
+ctrl2 = ctrl_sets['ctrl2']
+ctrl3 = ctrl_sets['ctrl3']
+ctrl4 = ctrl_sets['ctrl4']
+ctrl5 = ctrl_sets['ctrl5']
+
+
+## concat all
+kras_ctrl_ct_tmp = pd.concat([kras_plot_dat, ctrl1, ctrl2, ctrl3, ctrl4, ctrl5], axis=0)
+
+
+## plot grid distribution
+
+
+

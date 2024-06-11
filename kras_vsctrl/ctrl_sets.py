@@ -24,6 +24,12 @@ tpm = tpm[tpm.index.notnull()]
 # merge transcripts, only ~100 genes with more than 1 transcript
 tpm = tpm.groupby(tpm.index).mean()
 
+## log2tpm
+tpm_normed = np.log2(np.divide(*(tpm.iloc[:,np.where(tpm.columns.str.contains('_N'))[0]]+1).\
+                    align((tpm.iloc[:,np.where(tpm.columns.str.contains('_C'))[0]]+1), axis=0)))
+
+tpm_normed.columns = tpm_normed.columns.str.replace('N', 'Rep').str.replace('Day', 'D') + '_log2tpm'
+
 
 # kras down
 kras_dn = ['ABCB11','ABCG4','ACTC1','ADRA2C','AKR1B10','ALOX12B','AMBN','ARHGDIG','ARPP21','ASB7','ATP4A','ATP6V1B1','BARD1',
@@ -67,20 +73,89 @@ for i in range(krasdn_d1ctrl.shape[0]):
 ## convert index to genes
 ctrl_set_genes = [all_d1ctrl.index[idx].to_list() for idx in ctrl_sets]
 
-new_lists = []
-for sublist in ctrl_set_genes:
-    new_list = []
-    for i in range(len(sublist)):
-        if i % 2 == 0:
-            new_list.append(sublist[i])
-    new_lists.append(new_list)
-
 ctrl_genes = pd.DataFrame(ctrl_set_genes)
 ctrl_genes = ctrl_genes.drop_duplicates()
 
 ctrl_genes.columns = ['group1','group2','group3','group4','group5']
 
-ctrl_genes.to_csv('ctrl_genes.csv',index=False)
+
+## box plot of kras dn vs 5 control sets
+
+kras_dnset = tpm_normed.loc[kras_dn].stack().to_frame().assign(geneset='krasdn')
+ctrl_set1 = tpm_normed.loc[ctrl_genes.iloc[:,0]].stack().to_frame().assign(geneset='ctrl1')
+ctrl_set2 = tpm_normed.loc[ctrl_genes.iloc[:,1]].stack().to_frame().assign(geneset='ctrl2')
+ctrl_set3 = tpm_normed.loc[ctrl_genes.iloc[:,2]].stack().to_frame().assign(geneset='ctrl3')
+ctrl_set4 = tpm_normed.loc[ctrl_genes.iloc[:,3]].stack().to_frame().assign(geneset='ctrl4')
+ctrl_set5 = tpm_normed.loc[ctrl_genes.iloc[:,4]].stack().to_frame().assign(geneset='ctrl5')
+
+
+## concat all sets
+all_sets = pd.concat([kras_dnset,ctrl_set1,ctrl_set2,ctrl_set3,ctrl_set4,ctrl_set5]).reset_index()
+all_sets['day'] = all_sets['level_1'].str.split('_').str[0]
+all_sets['rep'] = all_sets['level_1'].str.split('_').str[1]
+
+
+
+## plot the box
+g = sns.catplot(data=all_sets, kind="box",
+            palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
+            x="geneset", y=0, col="day", aspect=1, 
+            showfliers=False, linewidth=1.2)
+g.set_axis_labels("", "log2(NSD2i/Vehicle) TPM")
+plt.savefig('ctrl_from_D1.pdf', bbox_inches='tight')
+plt.close()
+
+
+
+####### selecting random genes log2 normed tpm considering all time points ######
+krasdn_normed = tpm_normed.loc[kras_dn,:]
+other_normed = tpm_normed.loc[~tpm_normed.index.isin(kras_dn),:]
+
+# Calculate distances
+ctrl_sets_normed = []
+
+for i in range(krasdn_normed.shape[0]):
+    distances = other_normed.apply(lambda row: euclidean_distance(row.values, krasdn_normed.iloc[[i]].values), axis=1)
+    sorted_indices = np.argsort(distances)
+
+    # keep the 5 rows with the smallest distances
+    closest_indices = [idx for idx in sorted_indices][:5]
+    ctrl_sets_normed.append(closest_indices)
+
+## convert index to genes
+ctrl_sets_normed = [other_normed.index[idx].to_list() for idx in ctrl_sets_normed]
+
+
+ctrl_genes_normed = pd.DataFrame(ctrl_sets_normed)
+ctrl_genes_normed = ctrl_genes_normed.drop_duplicates()
+
+ctrl_genes_normed.columns = ['group1','group2','group3','group4','group5']
 
 
 ## box plot of kras dn vs 5 control sets
+ctrl_set1_normed = tpm_normed.loc[ctrl_genes_normed.iloc[:,0]].stack().to_frame().assign(geneset='ctrl1')
+ctrl_set2_normed = tpm_normed.loc[ctrl_genes_normed.iloc[:,1]].stack().to_frame().assign(geneset='ctrl2')
+ctrl_set3_normed = tpm_normed.loc[ctrl_genes_normed.iloc[:,2]].stack().to_frame().assign(geneset='ctrl3')
+ctrl_set4_normed = tpm_normed.loc[ctrl_genes_normed.iloc[:,3]].stack().to_frame().assign(geneset='ctrl4')
+ctrl_set5_normed = tpm_normed.loc[ctrl_genes_normed.iloc[:,4]].stack().to_frame().assign(geneset='ctrl5')
+
+
+## concat all sets
+all_sets_normed = pd.concat([kras_dnset,ctrl_set1_normed,ctrl_set2_normed,ctrl_set3_normed,ctrl_set4_normed,ctrl_set5_normed]).reset_index()
+all_sets_normed['day'] = all_sets_normed['level_1'].str.split('_').str[0]
+all_sets_normed['rep'] = all_sets_normed['level_1'].str.split('_').str[1]
+
+
+
+## plot the box
+g = sns.catplot(data=all_sets_normed, kind="box",
+            palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
+            x="geneset", y=0, col="day", aspect=1, 
+            showfliers=False, linewidth=1.2)
+g.set_axis_labels("", "log2(NSD2i/Vehicle) TPM")
+plt.savefig('ctrl_from_allnormedtpm.pdf', bbox_inches='tight')
+plt.close()
+
+
+# export
+ctrl_genes_normed.to_csv('ctrlsets_from_allnormedtpm.csv', index=False)
