@@ -31,6 +31,16 @@ tpm_normed = np.log2(np.divide(*(tpm.iloc[:,np.where(tpm.columns.str.contains('_
 tpm_normed.columns = tpm_normed.columns.str.replace('N', 'Rep').str.replace('Day', 'D') + '_log2tpm'
 
 
+## load enhancer annotaion to get the genes that eventually will be using
+ct_enhancer_normed = pd.read_csv('../mark_profile/signal_on_enhancer/ct_enhancer_normed.txt', header=0, index_col=0, sep='\t')
+ct_enhancer_normed.columns = ct_enhancer_normed.columns.str.replace('NSD2i_', '')
+
+
+## merged gene set
+# gene_uni = set(ct_enhancer_normed.index) & set(tpm_normed.index)
+gene_uni = set(tpm_normed.index)
+
+
 # kras down
 kras_dn = ['ABCB11','ABCG4','ACTC1','ADRA2C','AKR1B10','ALOX12B','AMBN','ARHGDIG','ARPP21','ASB7','ATP4A','ATP6V1B1','BARD1',
             'BMPR1B','BRDT','BTG2','C5','CACNA1F','CACNG1','CALCB','CALML5','CAMK1D','CAPN9','CCDC106','CCNA1','CCR8','CD207',
@@ -49,10 +59,12 @@ kras_dn = ['ABCB11','ABCG4','ACTC1','ADRA2C','AKR1B10','ALOX12B','AMBN','ARHGDIG
             'ZC2HC1C','ZNF112']
 
 
+kras_dn = [x for x in kras_dn if x in gene_uni]
+
 
 ### selecting random genes from conrol d1
 krasdn_d1ctrl = tpm.loc[kras_dn,tpm.columns.str.contains('Day1_C')]
-all_d1ctrl = tpm.loc[:,tpm.columns.str.contains('Day1_C')]
+all_d1ctrl = tpm.loc[gene_uni,tpm.columns.str.contains('Day1_C')]
 
 def euclidean_distance(row1, row2):
     return np.sqrt(np.sum((row1 - row2) ** 2))
@@ -65,7 +77,7 @@ for i in range(krasdn_d1ctrl.shape[0]):
     sorted_indices = np.argsort(distances)
 
     # keep the 5 rows with the smallest distances
-    closest_indices = [idx for idx in sorted_indices][1:6]
+    closest_indices = [idx for idx in sorted_indices if all_d1ctrl.index[idx] in gene_uni][1:6]
     ctrl_sets.append(closest_indices)
 
 
@@ -74,9 +86,11 @@ for i in range(krasdn_d1ctrl.shape[0]):
 ctrl_set_genes = [all_d1ctrl.index[idx].to_list() for idx in ctrl_sets]
 
 ctrl_genes = pd.DataFrame(ctrl_set_genes)
-ctrl_genes = ctrl_genes.drop_duplicates()
+# ctrl_genes = ctrl_genes.drop_duplicates()
 
 ctrl_genes.columns = ['group1','group2','group3','group4','group5']
+ctrl_genes['krasdn'] = kras_dn
+
 
 
 ## box plot of kras dn vs 5 control sets
@@ -97,10 +111,10 @@ all_sets['rep'] = all_sets['level_1'].str.split('_').str[1]
 
 
 ## plot the box
-g = sns.catplot(data=all_sets, kind="box",
+g = sns.catplot(data=all_sets, kind="violin",
             palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
             x="geneset", y=0, col="day", aspect=1, 
-            showfliers=False, linewidth=1.2)
+            linewidth=1.2)
 g.set_axis_labels("", "log2(NSD2i/Vehicle) TPM")
 plt.savefig('ctrl_from_D1.pdf', bbox_inches='tight')
 plt.close()
@@ -109,7 +123,7 @@ plt.close()
 
 ####### selecting random genes log2 normed tpm considering all time points ######
 krasdn_normed = tpm_normed.loc[kras_dn,:]
-other_normed = tpm_normed.loc[~tpm_normed.index.isin(kras_dn),:]
+other_normed = tpm_normed.loc[gene_uni,:]
 
 # Calculate distances
 ctrl_sets_normed = []
@@ -119,7 +133,7 @@ for i in range(krasdn_normed.shape[0]):
     sorted_indices = np.argsort(distances)
 
     # keep the 5 rows with the smallest distances
-    closest_indices = [idx for idx in sorted_indices][:5]
+    closest_indices = [idx for idx in sorted_indices if all_d1ctrl.index[idx] in gene_uni][1:6]
     ctrl_sets_normed.append(closest_indices)
 
 ## convert index to genes
@@ -127,9 +141,10 @@ ctrl_sets_normed = [other_normed.index[idx].to_list() for idx in ctrl_sets_norme
 
 
 ctrl_genes_normed = pd.DataFrame(ctrl_sets_normed)
-ctrl_genes_normed = ctrl_genes_normed.drop_duplicates()
+# ctrl_genes_normed = ctrl_genes_normed.drop_duplicates()
 
 ctrl_genes_normed.columns = ['group1','group2','group3','group4','group5']
+ctrl_genes_normed['krasdn'] = kras_dn
 
 
 ## box plot of kras dn vs 5 control sets
@@ -148,14 +163,15 @@ all_sets_normed['rep'] = all_sets_normed['level_1'].str.split('_').str[1]
 
 
 ## plot the box
-g = sns.catplot(data=all_sets_normed, kind="box",
+g = sns.catplot(data=all_sets_normed, kind="violin",
             palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
             x="geneset", y=0, col="day", aspect=1, 
-            showfliers=False, linewidth=1.2)
+            linewidth=1.2)
 g.set_axis_labels("", "log2(NSD2i/Vehicle) TPM")
 plt.savefig('ctrl_from_allnormedtpm.pdf', bbox_inches='tight')
 plt.close()
 
 
 # export
+ctrl_genes.to_csv('ctrlsets_from_D1.csv', index=False)
 ctrl_genes_normed.to_csv('ctrlsets_from_allnormedtpm.csv', index=False)

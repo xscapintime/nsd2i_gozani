@@ -5,6 +5,9 @@ import seaborn as sns
 import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.font_manager
+from itertools import product
+from statannotations.Annotator import Annotator
+
 
 plt.style.use('seaborn-poster')
 matplotlib.rcParams['pdf.fonttype'] = 42
@@ -15,6 +18,9 @@ matplotlib.rcParams['ps.fonttype'] = 42
 ct_enhancer_normed = pd.read_csv('ct_enhancer_normed.txt', header=0, index_col=0, sep='\t')
 ct_enhancer_normed.columns = ct_enhancer_normed.columns.str.replace('NSD2i_', '')
 
+
+# stats of enhancer count
+enhancer_count = ct_enhancer_normed.index.value_counts().to_dict()
 
 ## kras down
 kras_dn = ['ABCB11','ABCG4','ACTC1','ADRA2C','AKR1B10','ALOX12B','AMBN','ARHGDIG','ARPP21','ASB7','ATP4A','ATP6V1B1','BARD1',
@@ -33,10 +39,9 @@ kras_dn = ['ABCB11','ABCG4','ACTC1','ADRA2C','AKR1B10','ALOX12B','AMBN','ARHGDIG
             'TGM1','THNSL2','THRB','TLX1','TNNI3','TSHB','UGT2B17','UPK3B','VPREB1','VPS50','WNT16','YBX2','YPEL1','ZBTB16',
             'ZC2HC1C','ZNF112']
 
+
 ## ctrl sets
-kras_ctrl_sets = pd.read_csv('../../kras_vsctrl/ctrlsets_from_allnormedtpm.csv')
-
-
+kras_ctrl_sets = pd.read_csv('../../kras_vsctrl/ctrlsets_from_D1.csv')
 
 ## count enhancer number
 kras_df = ct_enhancer_normed[ct_enhancer_normed.index.isin(kras_dn)]
@@ -61,34 +66,103 @@ ctrl4 = ctrl_sets['ctrl4']
 ctrl5 = ctrl_sets['ctrl5']
 
 
-## stats df
-stas_df = pd.DataFrame(columns=['Gene Number', 'Enhancer Number', 'Average Enhancer Number'],
-                       index=['kras_df', 'ctrl1', 'ctrl2', 'ctrl3', 'ctrl4', 'ctrl5'])
+## stats data
 
+def count_signs(column):
+    positive = (column > 0).sum()
+    negative = (column < 0).sum()
+    nochange  = (column == 0).sum()
+    return pd.Series({'gain': positive, 'loss': negative, 'nochange': nochange})
 
+stas = []
 for n in ['kras_df', 'ctrl1', 'ctrl2', 'ctrl3', 'ctrl4', 'ctrl5']:
-    df = eval(n)
-    gene_number = len(df.index.unique())
-    enhancer_number = df.shape[0]
-    avg_enhancer_number = enhancer_number / gene_number
+    dd = eval(n)
+    countstat = dd.loc[:,dd.columns.str.contains('H3K27Ac')].apply(count_signs).stack().reset_index()
+    # countstat['rep'] = countstat['level_1'].str.split('_').str[1]
+    countstat['day'] = countstat['level_1'].str.split('_').str[0]
+    countstat = countstat.groupby(['level_0', 'day']).mean().reset_index()
+    countstat['pergene'] = countstat[0] / len(kras_dn)
+    countstat['set'] = n
+    stas.append(countstat)
 
-    stas_df.loc[n] = [gene_number, enhancer_number, avg_enhancer_number]
-
-
-sns.barplot(data=stas_df, x=stas_df.index, y='Average Enhancer Number')
-
-
-
-##########------------------------------------##########
-# split by k27ac
-new_dat = kras_ctrl_ct_tmp[['connected_gene', 'geneset','mark_x','value_x','day']].drop_duplicates()
-new_ac = new_dat[new_dat['mark_x'] == 'H3K27Ac']
-new_ac['group'] = np.where(new_ac['value_x'] == 0, 'no change', np.where(new_ac['value_x'] > 0, 'gain', 'loss'))
+stas_df = pd.concat(stas)
 
 
-g = sns.catplot(data=new_ac, x='geneset', kind='count',
+# plot enhancer per gene
+plt.figure(figsize=(6, 5))
+g = sns.barplot(data=stas_df.groupby(['day','set']).sum().loc[['D1']].reset_index(),
+            x='set', y='pergene',
             palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
-            col='group', aspect=1.4)
+            order=['kras_df', 'ctrl1', 'ctrl2', 'ctrl3', 'ctrl4', 'ctrl5'])
+g.set(xlabel="Genesets", ylabel="Ehancer per gene") 
+plt.savefig('enhancer_per_gene.pdf', bbox_inches='tight')
 
 
-sns.countplot(data=kras_ctrl_ct_tmp[['connected_gene', 'geneset']].drop_duplicates(), x='geneset')
+# plot by lose or gain k27ac
+g = sns.catplot(data=stas_df, x='set', y='pergene', hue='level_0', kind='bar', palette='Set2',col='day')
+g.set_axis_labels("Genesets", "Ehancer per gene")
+plt.savefig('enhancer_k27actype_per_gene.pdf', bbox_inches='tight')
+
+
+
+### enhancer count violin dot plot + t-test
+count_df = pd.DataFrame()
+
+for column in kras_ctrl_sets.columns:
+    count_df[column] = kras_ctrl_sets[column].map(enhancer_count).fillna(0)
+
+count_df.index = kras_ctrl_sets.krasdn
+count_df = count_df[['krasdn','group1', 'group2', 'group3', 'group4', 'group5']]
+
+plot_df = count_df.stack().reset_index()
+
+
+plt.figure(figsize=(7, 6))
+g = sns.violinplot(data=plot_df, x='level_1', y=0,
+               palette = ["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
+               saturation=0.7, linewidth=1, inner='box')
+
+g = sns.stripplot(data=plot_df, x="level_1", y=0, jitter=True,
+              color='black', alpha=0.3, dodge=True, size=2)
+
+plt.ylabel('Enhancer number per gene')
+plt.xlabel('')
+
+# stats
+comb = list(product([count_df.columns[0]],count_df.columns[1:]))
+
+annotator = Annotator(g, comb, data=plot_df, x='level_1', y=0)
+annotator.configure(test="t-test_paired", text_format="full",loc='inside')
+annotator.apply_and_annotate()
+
+plt.savefig('enhancer_count_violin.pdf', bbox_inches='tight')
+
+
+
+
+## if remove SGK1
+count_df_new = count_df.drop('SGK1', inplace=False)
+
+plot_df_new = count_df_new.stack().reset_index()
+
+plt.figure(figsize=(7, 6))
+g = sns.violinplot(data=plot_df_new, x='level_1', y=0,
+               palette = ["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
+               saturation=0.7, linewidth=1, inner='box')
+
+g = sns.stripplot(data=plot_df_new, x="level_1", y=0, jitter=True,
+              color='black', alpha=0.3, dodge=True, size=2)
+
+plt.ylabel('Enhancer number per gene')
+plt.xlabel('')
+
+# stats
+comb = list(product([count_df_new.columns[0]],count_df_new.columns[1:]))
+
+annotator = Annotator(g, comb, data=plot_df_new, x='level_1', y=0)
+annotator.configure(test="t-test_paired", text_format="full",loc='inside')
+annotator.apply_and_annotate()
+
+plt.savefig('enhancer_count_violin_drop.pdf', bbox_inches='tight')
+
+

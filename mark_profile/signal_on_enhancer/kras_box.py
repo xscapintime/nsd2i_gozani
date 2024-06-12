@@ -30,7 +30,7 @@ ac_normed = np.log2((nsd2i+1)/(ck+1).values)
 ac_normed.index = ac_hancer['connected_gene']
 
 # remove rows that all the elements are zero
-ac_normed = ac_normed[np.sum(ac_normed,axis=1) > 0]
+# ac_normed = ac_normed[np.sum(ac_normed,axis=1) > 0]
 
 # export
 ac_normed.to_csv('ct_enhancer_normed.txt', sep='\t', header=True, index=True)
