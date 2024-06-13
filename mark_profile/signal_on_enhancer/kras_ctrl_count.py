@@ -114,6 +114,8 @@ for column in kras_ctrl_sets.columns:
 count_df.index = kras_ctrl_sets.krasdn
 count_df = count_df[['krasdn','group1', 'group2', 'group3', 'group4', 'group5']]
 
+
+#### plot
 plot_df = count_df.stack().reset_index()
 
 
@@ -166,3 +168,45 @@ annotator.apply_and_annotate()
 plt.savefig('enhancer_count_violin_drop.pdf', bbox_inches='tight')
 
 
+
+
+## combine 5 controls
+plot_df_mergedcrtl = pd.concat([count_df[['krasdn']], count_df.loc[:,count_df.columns.str.contains('group')].mean(axis=1)
+],axis=1).stack().reset_index()
+
+plot_df_mergedcrtl.columns = ['gene', 'set', 'enhancer_n']
+plot_df_mergedcrtl.set = plot_df_mergedcrtl.set.replace({0: 'ctrl'})
+
+
+plt.figure(figsize=(5, 5))
+g = sns.violinplot(data=plot_df_mergedcrtl, x='set', y='enhancer_n',
+               palette = ["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
+               saturation=0.7, linewidth=1, inner='box')
+
+g = sns.stripplot(data=plot_df_mergedcrtl, x="set", y='enhancer_n', jitter=True,
+              color='black', alpha=0.3, dodge=True, size=2)
+
+df_mean = plot_df_mergedcrtl.groupby('set', sort=False)['enhancer_n'].mean()
+_ = [g.hlines(y, i-.12, i+.12, zorder=2, colors='white', linewidth=2) for i, y in df_mean.reset_index()['enhancer_n'].items()]
+
+nobs = ["mean: " + str(i) for i in df_mean.to_list()]
+
+pos = range(len(nobs))
+for tick, label in zip(pos, g.get_xticklabels()):
+   g.text(pos[tick], df_mean[tick] + 1, nobs[tick],
+            horizontalalignment='center',
+            size='small',
+            color='black')
+
+
+plt.ylabel('Enhancer number per gene')
+plt.xlabel('')
+
+# stats
+comb = [tuple(set(plot_df_mergedcrtl.set))]
+
+annotator = Annotator(g, comb, data=plot_df_mergedcrtl, x='set', y='enhancer_n')
+annotator.configure(test="t-test_paired", text_format="full",loc='inside')
+annotator.apply_and_annotate()
+
+plt.savefig('enhancer_count_violin_mergedctrl.pdf', bbox_inches='tight')
