@@ -78,7 +78,7 @@ rep_merged_long['mark'] = rep_merged_long['level_1'].str.split('_').str[1]
 
 g = sns.FacetGrid(rep_merged_long, col="day", row="mark", margin_titles=True)
 g.map(sns.histplot, 0)
-
+plt.savefig('histplot_alllog2.pdf')
 
 
 
@@ -124,7 +124,7 @@ for g in rep_merged.columns:
 
     # plt.show()
     plt.tight_layout()
-    plt.savefig(f'umap_{g}.pdf')
+    plt.savefig(f'umap_{g}.png')
     plt.close()
 
 
@@ -175,7 +175,7 @@ for g in rep_merged.columns:
 
     # plt.show()
     plt.tight_layout()
-    plt.savefig(f'umap_{g}_kras.pdf')
+    plt.savefig(f'umap_{g}_kras.png')
     plt.close()
 
 
