@@ -133,6 +133,32 @@ E2F_TARGETS = ['AK2','ANP32E','ASF1A','ASF1B','ATAD2','AURKA','AURKB','BARD1','B
                'XPO1','XRCC6','ZW10']
 
 
+HEDGEHOG = ['CHE','ADGRG1','AMOT','CDK5R1','CDK6','CELSR1','CNTFR','CRMP1','DPYSL2','ETS2','GLI1','HEY1','HEY2','L1CAM','LDB1','MYH9',
+            'NF1','NKX6-1','NRCAM','NRP1','NRP2','OPHN1','PLG','PML','PTCH1','RASA1','RTN1','SCG2','SHH','SLIT1','THY1','TLE1','TLE3',
+            'UNC5C','VEGFA','VLDLR']
+
+
+MYC_V1 = ['ABCE1','ACP1','AIMP2','AP3S1','APEX1','BUB3','C1QBP','CAD','CANX','CBX3','CCNA2','CCT2','CCT3','CCT4','CCT5',
+          'CCT7','CDC20','CDC45','CDK2','CDK4','CLNS1A','CNBP','COPS5','COX5A','CSTF2','CTPS1','CUL1','CYC1','DDX18',
+          'DDX21','DEK','DHX15','DUT','EEF1B2','EIF1AX','EIF2S1','EIF2S2','EIF3B','EIF3D','EIF3J','EIF4A1','EIF4E',
+          'EIF4G2','EIF4H','EPRS1','ERH','ETF1','EXOSC7','FAM120A','FBL','G3BP1','GLO1','GNL3','GOT2','GSPT1','H2AZ1',
+          'HDAC2','HDDC2','HDGF','HNRNPA1','HNRNPA2B1','HNRNPA3','HNRNPC','HNRNPD','HNRNPR','HNRNPU','HPRT1','HSP90AB1',
+          'HSPD1','HSPE1','IARS1','IFRD1','ILF2','IMPDH2','KARS1','KPNA2','KPNB1','LDHA','LSM2','LSM7','MAD2L1','MCM2',
+          'MCM4','MCM5','MCM6','MCM7','MRPL23','MRPL9','MRPS18B','MYC','NAP1L1','NCBP1','NCBP2','NDUFAB1','NHP2','NME1',
+          'NOLC1','NOP16','NOP56','NPM1','ODC1','ORC2','PA2G4','PABPC1','PABPC4','PCBP1','PCNA','PGK1','PHB1','PHB2',
+          'POLD2','POLE3','PPIA','PPM1G','PRDX3','PRDX4','PRPF31','PRPS2','PSMA1','PSMA2','PSMA4','PSMA6','PSMA7',
+          'PSMB2','PSMB3','PSMC4','PSMC6','PSMD1','PSMD14','PSMD3','PSMD7','PSMD8','PTGES3','PWP1','RACK1','RAD23B',
+          'RAN','RANBP1','RFC4','RNPS1','RPL14','RPL18','RPL22','RPL34','RPL6','RPLP0','RPS10','RPS2','RPS3','RPS5',
+          'RPS6','RRM1','RRP9','RSL1D1','RUVBL2','SERBP1','SET','SF3A1','SF3B3','SLC25A3','SMARCC1','SNRPA','SNRPA1',
+          'SNRPB2','SNRPD1','SNRPD2','SNRPD3','SNRPG','SRM','SRPK1','SRSF1','SRSF2','SRSF3','SRSF7','SSB','SSBP1',
+          'STARD7','SYNCRIP','TARDBP','TCP1','TFDP1','TOMM70','TRA2B','TRIM28','TUFM','TXNL4A','TYMS','U2AF1','UBA2',
+          'UBE2E1','UBE2L3','USP1','VBP1','VDAC1','VDAC3','XPO1','XPOT','XRCC6','YWHAE','YWHAQ']
+
+MYC_V2 = ['AIMP2','BYSL','CBX3','CDK4','DCTPP1','DDX18','DUSP2','EXOSC5','FARSA','GNL3','GRWD1','HK2','HSPD1','HSPE1',
+          'IMP4','IPO4','LAS1L','MAP3K6','MCM4','MCM5','MPHOSPH10','MRTO4','MYBBP1A','MYC','NDUFAF4','NIP7','NOC4L',
+          'NOLC1','NOP16','NOP2','NOP56','NPM1','PA2G4','PES1','PHB1','PLK1','PLK4','PPAN','PPRC1','PRMT3','PUS1',
+          'RABEPK','RCL1','RRP12','RRP9','SLC19A1','SLC29A2','SORD','SRM','SUPV3L1','TBRG4','TCOF1','TFB2M','TMEM97',
+          'UNG','UTP20','WDR43','WDR74']
 
 
 ## slecting random geens from control d1
@@ -142,7 +168,8 @@ def euclidean_distance(row1, row2):
 
 all_d1ctrl = tpm.loc[gene_uni,tpm.columns.str.contains('Day1_C')]
 
-for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRANSITION', 'INTERFERON_GAMMA_RESPONSE', 'E2F_TARGETS']:
+for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRANSITION', 'INTERFERON_GAMMA_RESPONSE', 'E2F_TARGETS',
+           'HEDGEHOG', 'MYC_V1', 'MYC_V2']:
     
     path = eval(pn)
 
@@ -226,7 +253,7 @@ for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRA
     df_mean = plot_df_mergedcrtl.groupby('set', sort=False)['enhancer_n'].mean()
     _ = [g.hlines(y, i-.12, i+.12, zorder=2, colors='white', linewidth=2) for i, y in df_mean.reset_index()['enhancer_n'].items()]
 
-    nobs = ["mean: " + str(i) for i in df_mean.to_list()]
+    nobs = ["mean: " + str(f"{i:.2f}") for i in df_mean.to_list()]
 
     pos = range(len(nobs))
     for tick, label in zip(pos, g.get_xticklabels()):
