@@ -14,11 +14,11 @@ matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
 ## load ensemble id to symbol matching table
-ensembl_syb = pd.read_csv('../rnaseq/umap/human_ensembl_syb.tsv', header=0, index_col=None, sep='\t')
+ensembl_syb = pd.read_csv('../../rnaseq/umap/human_ensembl_syb.tsv', header=0, index_col=None, sep='\t')
 ensembl_syb = dict(zip(ensembl_syb['ensembl_gene_id'], ensembl_syb['hgnc_symbol']))
 
 ## load tpm table
-tpm = pd.read_csv('../rnaseq/tpm/tximport-tpm.csv', header=0, index_col=0)
+tpm = pd.read_csv('../../rnaseq/tpm/tximport-tpm.csv', header=0, index_col=0)
 
 ## change index to gene symbol
 tpm = tpm.set_index(tpm.index.map(ensembl_syb))
@@ -35,7 +35,7 @@ tpm_normed.columns = tpm_normed.columns.str.replace('N', 'Rep').str.replace('Day
 
 
 ## load enhancer annotaion to get the genes that eventually will be using
-ct_enhancer_normed = pd.read_csv('../mark_profile/signal_on_enhancer/ct_enhancer_normed.txt', header=0, index_col=0, sep='\t')
+ct_enhancer_normed = pd.read_csv('../../mark_profile/signal_on_enhancer/ct_enhancer_normed.txt', header=0, index_col=0, sep='\t')
 ct_enhancer_normed.columns = ct_enhancer_normed.columns.str.replace('NSD2i_', '')
 
 # stats of enhancer count
@@ -165,7 +165,7 @@ MYC_V2 = ['AIMP2','BYSL','CBX3','CDK4','DCTPP1','DDX18','DUSP2','EXOSC5','FARSA'
 def euclidean_distance(row1, row2):
     return np.sqrt(np.sum((row1 - row2) ** 2))
 
-
+# base expression
 all_d1ctrl = tpm.loc[gene_uni,tpm.columns.str.contains('Day1_C')]
 
 for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRANSITION', 'INTERFERON_GAMMA_RESPONSE', 'E2F_TARGETS',
@@ -192,6 +192,9 @@ for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRA
 
     ctrl_genes.columns = ['ctrl1','ctrl2','ctrl3','ctrl4','ctrl5']
     ctrl_genes[f'{pn}'] = path
+
+    # save to file
+    ctrl_genes.to_csv(f'{pn}_ctrl_genes.txt', index=False, sep='\t')
 
 
     ## box plot of kras dn vs 5 control sets
