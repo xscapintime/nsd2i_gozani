@@ -21,9 +21,14 @@ paths = ['E2F_TARGETS',
 'MYC_V1',
 'MYC_V2']
 
+# load gene sets and ctrls table
+gene_sets = sorted(glob.glob(os.path.join('../../../path_vsctrl_enhancernum/ctrlsets','*.txt')))
+
 
 for pn in paths:
-    
+    ## load gene sets and ctrls table
+    set_df = pd.read_csv(os.path.join('../../../path_vsctrl_enhancernum/ctrlsets/', f'{pn}_ctrl_genes.txt'), sep='\t')
+
     ## load bed files and aggregate
     bedfiles = sorted(glob.glob(f'*{pn}*.bed'))
     conditions = np.unique([x.split('.sig')[0].replace('MiaPaCa2.','') for x in bedfiles])
@@ -62,17 +67,16 @@ for pn in paths:
     nomred_df['log2fc'] = np.log2((nomred_df['nice_nsd2']+1)/(nomred_df['nice_ck']+1))
 
 
-    ## merge 5 controls
+    ## merge 5 controls but kept each promoter
     plot_df = pd.concat([nomred_df[~nomred_df.set.str.contains('ctrl')][['chr','start','end','gene','strand','day','log2fc','set']],
                             nomred_df[nomred_df.set.str.contains('ctrl')].groupby(['chr','start','end','gene','strand','day']).mean().reset_index().assign(set='ctrls')[['chr','start','end','gene','strand','day','log2fc','set']]        
                             ])
-
+    plot_df['set'] = plot_df['set'].str.split('_').str[0]
+    
     ## plot
-    # plot
-    plt.figure(figsize=(10, 5))
     g = sns.catplot(data=plot_df, kind="violin",palette=["#9F79EE", "#CDC9C9"],
                 x="set", y='log2fc', col="day",
-                saturation=0.7, linewidth=1, inner='box')
+                saturation=0.7, linewidth=1, inner='box', aspect=0.7)
     #https://stackoverflow.com/questions/67309730/how-to-overlay-a-scatterplot-on-top-of-boxplot-with-sns-catplot
     g.map_dataframe(sns.stripplot, x="set", y='log2fc', 
                 palette=["#404040"], jitter=True,
@@ -92,11 +96,65 @@ for pn in paths:
         'plot': 'violinplot'
     }
     g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
-    for ax in g.axes.flat:
-        ax.set_ylabel('log2(NSD2i/Vehicle) NiCE-seq')
-        ax.set_xlabel('')
-    g.fig.suptitle(f'{pn}', y=1.02, fontsize=12)
+
+    g.set_axis_labels("", "log2(NSD2i/Vehicle) NiCE-seq")
+
+    # for ax in g.axes.flat:
+    #     ax.set_xticklabels( [l.split('_')[0] for l in np.unique(plot_df.set)] )
+
+    g.fig.suptitle(f'{pn}', y=1.02, fontsize=16)
+    # plt.tight_layout()
     plt.savefig(f'{pn}_nice_onpromoter_violin_mergedctrl.pdf', bbox_inches='tight')
+    plt.savefig(f'{pn}_nice_onpromoter_violin_mergedctrl.png', bbox_inches='tight', dpi=600)
     plt.close()
 
+
+
+    ### merge 5 controls and promoters based ref gene
+    mapping_dict = {ctrl: dict(zip(set_df[ctrl], set_df[pn])) for ctrl in set_df.columns[:-1]}
+    nomred_df['refgene'] = nomred_df.apply(lambda row: next((mapping_dict[ctrl].get(row['gene'], row['gene']) for ctrl in set_df.columns[:-1] if ctrl in row['set']), row['gene']), axis=1)
+
+
+    ## merge 5 controls
+    # merge promoter of each gene
+    # merge promoter of ctrl genes based ref gene
+    plot_df_mer = pd.concat([nomred_df[~nomred_df.set.str.contains('ctrl')].groupby(['refgene','day'])[['log2fc']].mean().reset_index().assign(set=f'{pn}'),
+                        nomred_df[nomred_df.set.str.contains('ctrl')].groupby(['refgene','day'])[['log2fc']].mean().reset_index().assign(set='ctrls')        
+                        ])
+    plot_df_mer['set'] = plot_df_mer['set'].str.split('_').str[0]
+    
+        ## plot
+    g = sns.catplot(data=plot_df_mer, kind="violin",palette=["#9F79EE", "#CDC9C9"],
+                x="set", y='log2fc', col="day",
+                saturation=0.7, linewidth=1, inner='box', aspect=0.7)
+    #https://stackoverflow.com/questions/67309730/how-to-overlay-a-scatterplot-on-top-of-boxplot-with-sns-catplot
+    g.map_dataframe(sns.stripplot, x="set", y='log2fc', 
+                palette=["#404040"], jitter=True,
+                alpha=0.3, dodge=True, size=2)
+
+    # stats
+    pairs = [tuple(set(plot_df_mer.set))]
+    ant = Annotator(None, pairs)
+    kwargs = {
+        'plot_params': { # this takes what normally goes into sns.barplot etc.
+            'x': 'set',
+            'y': 'log2fc',
+            'palette':["#9F79EE", "#CDC9C9"]
+        },
+        'annotation_func': 'apply_test', # has three options
+        'configuration': {'test': 't-test_welch', 'text_format' :'full'}, # this takes what normally goes into ant.configure
+        'plot': 'violinplot'
+    }
+    g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
+
+    g.set_axis_labels("", "log2(NSD2i/Vehicle) NiCE-seq")
+
+    # for ax in g.axes.flat:
+    #     ax.set_xticklabels( [l.split('_')[0] for l in np.unique(plot_df.set)] )
+
+    g.fig.suptitle(f'{pn}', y=1.02, fontsize=16)
+    # plt.tight_layout()
+    plt.savefig(f'{pn}_nice_onpromoter_violin_mergedctrl_meredpromo.pdf', bbox_inches='tight')
+    plt.savefig(f'{pn}_nice_onpromoter_violin_mergedctrl_meredpromo.png', bbox_inches='tight', dpi=600)
+    plt.close()
 

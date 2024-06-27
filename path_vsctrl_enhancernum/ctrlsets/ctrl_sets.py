@@ -213,12 +213,14 @@ for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRA
     all_sets['rep'] = all_sets['level_1'].str.split('_').str[1]
 
 
-    ## plot the box
+    ## plot the violin
     g = sns.catplot(data=all_sets, kind="violin",
                 palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
-                x="geneset", y=0, col="day", aspect=1, 
+                x="geneset", y=0, col="day", aspect=0.8, 
                 linewidth=1.2)
     g.set_axis_labels("", "log2(NSD2i/Vehicle) TPM")
+    g.fig.suptitle(f'{pn}', y=1.02, fontsize=16)
+
     plt.savefig(f'{pn}_ctrl_from_D1.pdf', bbox_inches='tight')
     plt.close()
 

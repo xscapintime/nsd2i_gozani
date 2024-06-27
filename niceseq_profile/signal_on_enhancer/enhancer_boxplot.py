@@ -31,7 +31,7 @@ nice_normed = np.log2((nsd2i+1)/(ck+1).values)
 nice_normed = pd.merge(nice_enh[['connected_gene']], nice_normed, left_index=True, right_index=True)
 
 # gene symbol as index
-nice_normed = nice_normed.set_index('connected_gene', inplace=True)
+nice_normed.set_index('connected_gene', inplace=True)
 
 
 
@@ -69,15 +69,15 @@ for s in gene_sets:
     # merge 5 control sets
     # `index` represents different enhancers of the same gene
     plot_long_df = pd.concat([all_sets[~all_sets.geneset.str.contains('ctrl')].groupby(['refgene', 'day','index']).mean().reset_index().assign(geneset=f'{pn}'.split('_')[0]),
-        all_sets[all_sets.geneset.str.contains('ctrl')].groupby(['refgene', 'day','index']).mean().reset_index().assign(geneset='ctrls')])
+        all_sets[all_sets.geneset.str.contains('ctrl')].groupby(['connected_gene', 'day','index']).mean().reset_index().assign(geneset='ctrls')])
 
 
     # plot
-    plt.figure(figsize=(10, 5))
+    # plt.figure(figsize=(10, 5))
 
     g = sns.catplot(data=plot_long_df, kind="violin",palette=["#7CCD7C", "#CDC9C9"],
                 x="geneset", y=0, col="day",
-                saturation=0.7, linewidth=1, inner='box')
+                saturation=0.7, linewidth=1, inner='box',aspect=0.7)
 
     #https://stackoverflow.com/questions/67309730/how-to-overlay-a-scatterplot-on-top-of-boxplot-with-sns-catplot
     g.map_dataframe(sns.stripplot, x="geneset", y=0, 
@@ -107,7 +107,56 @@ for s in gene_sets:
         ax.set_ylabel('log2(NSD2i/Vehicle) NiCE-seq')
         ax.set_xlabel('')
 
-    g.fig.suptitle(f'{pn}', y=1.02, fontsize=12)
+    g.fig.suptitle(f'{pn}', y=1.02, fontsize=16)
 
     plt.savefig(f'{pn}_nice_onenhancer_violin_mergedctrl.pdf', bbox_inches='tight')
+    plt.savefig(f'{pn}_nice_onenhancer_violin_mergedctrl.png', bbox_inches='tight',  dpi=600)
+    plt.close()
+
+
+
+    ## merge controls by refgene
+    plot_long_df_mer = pd.concat([all_sets[~all_sets.geneset.str.contains('ctrl')].groupby(['refgene', 'day']).mean().reset_index().assign(geneset=f'{pn}'.split('_')[0]),
+        all_sets[all_sets.geneset.str.contains('ctrl')].groupby(['refgene', 'day']).mean().reset_index().assign(geneset='ctrls')])
+
+
+    # plot
+    # plt.figure(figsize=(10, 5))
+
+    g = sns.catplot(data=plot_long_df_mer, kind="violin",palette=["#7CCD7C", "#CDC9C9"],
+                x="geneset", y=0, col="day",
+                saturation=0.7, linewidth=1, inner='box', aspect=0.7)
+
+    #https://stackoverflow.com/questions/67309730/how-to-overlay-a-scatterplot-on-top-of-boxplot-with-sns-catplot
+    g.map_dataframe(sns.stripplot, x="geneset", y=0, 
+                    palette=["#404040"], jitter=True,
+                   alpha=0.3, dodge=True, size=2)
+
+
+    # stats
+    pairs = [tuple(set(plot_long_df_mer.geneset))]
+
+    ant = Annotator(None, pairs)
+    kwargs = {
+        'plot_params': { # this takes what normally goes into sns.barplot etc.
+            'x': 'geneset',
+            'y': 0,
+            'palette':["#7CCD7C", "#CDC9C9"]
+        },
+        'annotation_func': 'apply_test', # has three options
+        'configuration': {'test': 't-test_welch', 'text_format' :'full'}, # this takes what normally goes into ant.configure
+        'plot': 'violinplot'
+    }
+
+    g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
+
+
+    for ax in g.axes.flat:
+        ax.set_ylabel('log2(NSD2i/Vehicle) NiCE-seq')
+        ax.set_xlabel('')
+
+    g.fig.suptitle(f'{pn}', y=1.02, fontsize=16)
+
+    plt.savefig(f'{pn}_nice_onenhancer_violin_mergedctrl_mergeden.pdf', bbox_inches='tight')
+    plt.savefig(f'{pn}_nice_onenhancer_violin_mergedctrl_mergeden.png', bbox_inches='tight',  dpi=600)
     plt.close()
