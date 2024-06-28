@@ -161,6 +161,9 @@ MYC_V2 = ['AIMP2','BYSL','CBX3','CDK4','DCTPP1','DDX18','DUSP2','EXOSC5','FARSA'
           'UNG','UTP20','WDR43','WDR74']
 
 
+PRC2_targ = pd.read_csv('PRC2_targets.txt', header=None, index_col=None, sep='\t')[0].to_list()
+
+
 ## slecting random geens from control d1
 def euclidean_distance(row1, row2):
     return np.sqrt(np.sum((row1 - row2) ** 2))
@@ -169,7 +172,7 @@ def euclidean_distance(row1, row2):
 all_d1ctrl = tpm.loc[gene_uni,tpm.columns.str.contains('Day1_C')]
 
 for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRANSITION', 'INTERFERON_GAMMA_RESPONSE', 'E2F_TARGETS',
-           'HEDGEHOG', 'MYC_V1', 'MYC_V2']:
+           'HEDGEHOG', 'MYC_V1', 'MYC_V2', 'PRC2_targ']:
     
     path = eval(pn)
 
@@ -195,106 +198,4 @@ for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRA
 
     # save to file
     ctrl_genes.to_csv(f'{pn}_ctrl_genes.txt', index=False, sep='\t')
-
-
-    ## box plot of kras dn vs 5 control sets
-
-    path_set = tpm_normed.loc[path].stack().to_frame().assign(geneset=f'{pn}'.split('_')[0])
-    ctrl_set1 = tpm_normed.loc[ctrl_genes.iloc[:,0]].stack().to_frame().assign(geneset='ctrl1')
-    ctrl_set2 = tpm_normed.loc[ctrl_genes.iloc[:,1]].stack().to_frame().assign(geneset='ctrl2')
-    ctrl_set3 = tpm_normed.loc[ctrl_genes.iloc[:,2]].stack().to_frame().assign(geneset='ctrl3')
-    ctrl_set4 = tpm_normed.loc[ctrl_genes.iloc[:,3]].stack().to_frame().assign(geneset='ctrl4')
-    ctrl_set5 = tpm_normed.loc[ctrl_genes.iloc[:,4]].stack().to_frame().assign(geneset='ctrl5')
-
-
-    ## concat all sets
-    all_sets = pd.concat([path_set,ctrl_set1,ctrl_set2,ctrl_set3,ctrl_set4,ctrl_set5]).reset_index()
-    all_sets['day'] = all_sets['level_1'].str.split('_').str[0]
-    all_sets['rep'] = all_sets['level_1'].str.split('_').str[1]
-
-
-    ## plot the violin
-    g = sns.catplot(data=all_sets, kind="violin",
-                palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
-                x="geneset", y=0, col="day", aspect=0.8, 
-                linewidth=1.2)
-    g.set_axis_labels("", "log2(NSD2i/Vehicle) TPM")
-    g.fig.suptitle(f'{pn}', y=1.02, fontsize=16)
-
-    plt.savefig(f'{pn}_ctrl_from_D1.pdf', bbox_inches='tight')
-    plt.close()
-
-
-    ## count enhancers
-    count_df = pd.DataFrame()
-
-    for column in ctrl_genes.columns:
-        count_df[column] = ctrl_genes[column].map(enhancer_count).fillna(0)
-
-    count_df.index = ctrl_genes[f'{pn}']
-    count_df = count_df[[f'{pn}','ctrl1', 'ctrl2', 'ctrl3', 'ctrl4', 'ctrl5']]
-
-
-    ## combine 5 controls
-    plot_df_mergedcrtl = pd.concat([count_df[[f'{pn}']],
-                                    count_df.loc[:,count_df.columns.str.contains('ctrl')].\
-                                        mean(axis=1)],axis=1).stack().reset_index()
-
-    plot_df_mergedcrtl.columns = ['gene', 'set', 'enhancer_n']
-    plot_df_mergedcrtl.set = plot_df_mergedcrtl.set.replace({0: 'ctrl'})
-    plot_df_mergedcrtl.set = plot_df_mergedcrtl.set.str.split('_').str[0]
-
-
-
-    ## plot the violin plot
-    plt.figure(figsize=(5, 5))
-    g = sns.violinplot(data=plot_df_mergedcrtl, x='set', y='enhancer_n',
-                   palette = ["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
-                   saturation=0.7, linewidth=1, inner='box')
-
-    g = sns.stripplot(data=plot_df_mergedcrtl, x="set", y='enhancer_n', jitter=True,
-                  color='black', alpha=0.3, dodge=True, size=2)
-
-    df_mean = plot_df_mergedcrtl.groupby('set', sort=False)['enhancer_n'].mean()
-    _ = [g.hlines(y, i-.12, i+.12, zorder=2, colors='white', linewidth=2) for i, y in df_mean.reset_index()['enhancer_n'].items()]
-
-    nobs = ["mean: " + str(f"{i:.2f}") for i in df_mean.to_list()]
-
-    pos = range(len(nobs))
-    for tick, label in zip(pos, g.get_xticklabels()):
-       g.text(pos[tick], df_mean[tick] + 1, nobs[tick],
-                horizontalalignment='center',
-                size='small',
-                color='black')
-
-
-    plt.ylabel('Enhancer number per gene')
-    plt.xlabel('')
-    plt.title(f'{pn}')
-
-    # stats
-    comb = [tuple(set(plot_df_mergedcrtl.set))]
-
-    annotator = Annotator(g, comb, data=plot_df_mergedcrtl, x='set', y='enhancer_n')
-    annotator.configure(test="t-test_paired", text_format="full",loc='inside')
-    annotator.apply_and_annotate()
-
-    plt.savefig(f'{pn}_enhancer_count_violin_mergedctrl.pdf', bbox_inches='tight')
-
-
-    ## enhancer count vs gene expression
-
-    #### don't seem to look good ########
-    # all_sets['enhancer_n'] = all_sets.gene.map(enhancer_count).fillna(0)
-    # all_sets['geneset'] = all_sets['geneset'].replace({'ctrl1': 'ctrl', 'ctrl2': 'ctrl', 'ctrl3': 'ctrl', 'ctrl4': 'ctrl', 'ctrl5': 'ctrl'})
-
-    # # merge reps and ctrls
-    # newdd = all_sets.groupby(['gene','day','geneset']).mean().reset_index()
-
-    # g = sns.relplot(data=newdd, x='enhancer_n', y=0, hue='geneset',
-    #     col="geneset", row='day',
-    #     height=3, aspect=1.5,)
-   
-    # g.set(xticks=[])
-
 
