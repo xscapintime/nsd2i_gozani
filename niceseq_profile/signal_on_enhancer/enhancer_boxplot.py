@@ -36,7 +36,7 @@ nice_normed.set_index('connected_gene', inplace=True)
 
 
 ## load gene sets
-gene_sets = sorted(glob.glob(os.path.join('../../path_vsctrl_enhancernum/ctrlsets','*.txt')))
+gene_sets = sorted(glob.glob(os.path.join('../../path_vsctrl_enhancernum/ctrlsets','*_ctrl_genes.txt')))
 
 for s in gene_sets:
     gene_set = pd.read_csv(s, sep='\t', header=0)
@@ -102,6 +102,38 @@ for s in gene_sets:
 
     g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
 
+    # add mean
+    # Iterate over each subplot
+    for ax in g.axes.flat:
+        # Get the data for this subplot
+        data = plot_long_df[
+            (plot_long_df['day'] == ax.get_title().split('=')[1].strip()) #&
+            # (plot_df['trt'] == ax.get_title().split('|')[0].split('=')[1].strip())
+        ]
+
+        # Iterate over each category in the x-axis
+        for category in data['geneset'].unique():
+            subset = data[data['geneset'] == category]
+            mean_val = subset[0].mean()
+
+            # Get the position of the category on the x-axis
+            x_position = data['geneset'].unique().tolist().index(category)
+
+            # Draw a short horizontal line at the mean value
+            ax.plot([x_position - 0.2, x_position + 0.2], [mean_val, mean_val], color='#FFD700', linestyle=':', linewidth=1.5)
+
+            # Annotate the mean value
+            ax.text(
+                x=x_position,
+                y=mean_val,
+                s=f'{mean_val:.2f}',
+                color='black',
+                ha='center',
+                va='bottom',
+                fontsize='small'
+            )
+
+
 
     for ax in g.axes.flat:
         ax.set_ylabel('log2(NSD2i/Vehicle) NiCE-seq')
@@ -150,6 +182,36 @@ for s in gene_sets:
 
     g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
 
+    # add mean
+    # Iterate over each subplot
+    for ax in g.axes.flat:
+        # Get the data for this subplot
+        data = plot_long_df[
+            (plot_long_df['day'] == ax.get_title().split('=')[1].strip()) #&
+            # (plot_df['trt'] == ax.get_title().split('|')[0].split('=')[1].strip())
+        ]
+
+        # Iterate over each category in the x-axis
+        for category in data['geneset'].unique():
+            subset = data[data['geneset'] == category]
+            mean_val = subset[0].mean()
+
+            # Get the position of the category on the x-axis
+            x_position = data['geneset'].unique().tolist().index(category)
+
+            # Draw a short horizontal line at the mean value
+            ax.plot([x_position - 0.2, x_position + 0.2], [mean_val, mean_val], color='#FFD700', linestyle=':', linewidth=1.5)
+
+            # Annotate the mean value
+            ax.text(
+                x=x_position,
+                y=mean_val,
+                s=f'{mean_val:.2f}',
+                color='black',
+                ha='center',
+                va='bottom',
+                fontsize='small'
+            )
 
     for ax in g.axes.flat:
         ax.set_ylabel('log2(NSD2i/Vehicle) NiCE-seq')

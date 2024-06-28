@@ -1,17 +1,13 @@
 import os,glob
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib
-from matplotlib import pyplot as plt
-import matplotlib.font_manager
-from statannotations.Annotator import Annotator
-from itertools import product
+# import seaborn as sns
+# import matplotlib
+# from matplotlib import pyplot as plt
+# import matplotlib.font_manager
+# from statannotations.Annotator import Annotator
+# from itertools import product
 
-
-plt.style.use('seaborn-poster')
-matplotlib.rcParams['pdf.fonttype'] = 42
-matplotlib.rcParams['ps.fonttype'] = 42
 
 ## load ensemble id to symbol matching table
 ensembl_syb = pd.read_csv('../../rnaseq/umap/human_ensembl_syb.tsv', header=0, index_col=None, sep='\t')
@@ -33,13 +29,6 @@ tpm_normed = np.log2(np.divide(*(tpm.iloc[:,np.where(tpm.columns.str.contains('_
 
 tpm_normed.columns = tpm_normed.columns.str.replace('N', 'Rep').str.replace('Day', 'D') + '_log2tpm'
 
-
-## load enhancer annotaion to get the genes that eventually will be using
-ct_enhancer_normed = pd.read_csv('../../mark_profile/signal_on_enhancer/ct_enhancer_normed.txt', header=0, index_col=0, sep='\t')
-ct_enhancer_normed.columns = ct_enhancer_normed.columns.str.replace('NSD2i_', '')
-
-# stats of enhancer count
-enhancer_count = ct_enhancer_normed.index.value_counts().to_dict()
 
 
 ## merged gene set

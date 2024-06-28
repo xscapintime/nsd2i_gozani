@@ -36,9 +36,16 @@ tpm_normed = np.log2(np.divide(*(tpm.iloc[:,np.where(tpm.columns.str.contains('_
 tpm_normed.columns = tpm_normed.columns.str.replace('N', 'Rep').str.replace('Day', 'D') + '_log2tpm'
 
 
+## load enhancer annotaion to get the genes that eventually will be using
+ct_enhancer_normed = pd.read_csv('../../mark_profile/signal_on_enhancer/ct_enhancer_normed.txt', header=0, index_col=0, sep='\t')
+ct_enhancer_normed.columns = ct_enhancer_normed.columns.str.replace('NSD2i_', '')
+
+# stats of enhancer count
+enhancer_count = ct_enhancer_normed.index.value_counts().to_dict()
+
+
 
 ## load ctrl gene tables
-
 ctrl_files = glob.glob('*_ctrl_genes.txt')
 
 pathname = [ f.replace('_ctrl_genes.txt', '') for f in ctrl_files ]
@@ -207,7 +214,7 @@ for pn in pathname:
     ## plot the violin
     g = sns.catplot(data=all_sets, kind="violin",
                 palette=["#4876FF", "#CDC9C9", "#CDC9C9", "#CDC9C9","#CDC9C9","#CDC9C9"],
-                x="geneset", y=0, col="day", aspect=0.8, 
+                x="geneset", y=0, col="day", aspect=1, 
                 linewidth=1.2)
     g.set_axis_labels("", "log2(NSD2i/Vehicle) TPM")
     g.fig.suptitle(f'{pn}', y=1.02, fontsize=16)
@@ -267,7 +274,7 @@ for pn in pathname:
     comb = [tuple(set(plot_df_mergedcrtl.set))]
 
     annotator = Annotator(g, comb, data=plot_df_mergedcrtl, x='set', y='enhancer_n')
-    annotator.configure(test="t-test_paired", text_format="full",loc='inside')
+    annotator.configure(test="t-test_welch", text_format="full",loc='inside')
     annotator.apply_and_annotate()
 
     plt.savefig(f'{pn}_enhancer_count_violin_mergedctrl.pdf', bbox_inches='tight')

@@ -5,6 +5,7 @@ library(TxDb.Hsapiens.UCSC.hg38.knownGene)
 library(Organism.dplyr)
 library(BSgenome.Hsapiens.UCSC.hg38)
 library(org.Hs.eg.db)
+library(stringr)
 
 source("rush_promo.R")
 
