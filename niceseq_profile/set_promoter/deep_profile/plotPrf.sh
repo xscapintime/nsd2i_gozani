@@ -47,7 +47,7 @@ do
 	echo $bn $ymax $zmax
 
 	#plotHeatmap -m $f -o $bn.png --colorMap Blues --refPointLabel 'Promoter' --yMin $ymin --yMax $ymax --zMax $zmax --regionsLabel $regions #--colorList "#9F79EE,#8B8989"
-	plotProfile -m $f -o $bn.prof.png --refPointLabel 'Promoter' --yMin $ymin --yMax $ymax --regionsLabel "Gene set" "Control" --colors "#4169E1" "#8B8989" --plotWidth 5.5 --plotTitle $regions
+	plotProfile -m $f -o $bn.prof.pdf --refPointLabel 'Promoter' --yMin $ymin --yMax $ymax --regionsLabel "Gene set" "Control" --colors "#4169E1" "#8B8989" --plotWidth 5.5 --plotTitle $regions
 
 
 
