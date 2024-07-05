@@ -9,6 +9,7 @@ import numpy as np
 # from itertools import product
 
 
+
 ## load ensemble id to symbol matching table
 # ensembl_syb = pd.read_csv('../../rnaseq/umap/human_ensembl_syb.tsv', header=0, index_col=None, sep='\t')
 # ensembl_syb = dict(zip(ensembl_syb['ensembl_gene_id'], ensembl_syb['hgnc_symbol']))
@@ -28,24 +29,37 @@ tpm = tpm[tpm.index.notnull()]
 tpm = tpm.groupby(tpm.index).mean()
 
 # export
-tpm.to_csv('tpm_symbol_ncrna.txt', sep='\t')
+# tpm.to_csv('tpm_symbol_ncrna.txt', sep='\t')
 
 
-## log2tpm
-tpm_normed = np.log2(np.divide(*(tpm.iloc[:,np.where(tpm.columns.str.contains('_N'))[0]]+1).\
-                    align((tpm.iloc[:,np.where(tpm.columns.str.contains('_C'))[0]]+1), axis=0)))
+## to be consistent with ...
+count_d5 = pd.read_csv('../../rnaseq/counts/day5counts.tsv', header=0, index_col=0, sep='\t')
 
-tpm_normed.columns = tpm_normed.columns.str.replace('N', 'Rep').str.replace('Day', 'D') + '_log2tpm'
+# remove rows that the sum is less than 20
+genes_postfilt = count_d5[(count_d5 >= 20).sum(axis=1) >= 0.5 * count_d5.shape[1]].index
+
+tpm = tpm.loc[genes_postfilt]
+
+# export
+# tpm.to_csv('tpm_symbol_filtered.txt', sep='\t')
 
 
 ## DE genes
-de_genes = pd.read_csv('../../rnaseq/significant_results_day5_0.05_1.txt', header=0, index_col=0, sep='\t')
-de_genes = de_genes.index.to_list()
+# too few genes will be selected since only 1002 DE genes
+# de_genes = pd.read_csv('../../rnaseq/significant_results_day5_0.05_1.txt', header=0, index_col=0, sep='\t')
+# de_genes = de_genes.index.to_list()
+
+
+## load enhancer annotaion to get the genes that eventually will be using
+gennehancer = pd.read_csv('../sets_enhancer/GeneHancer_v5.bestgene.bed', header=None, sep='\t')
+gennehancer.set_index(gennehancer[4], inplace=True)
+
+
 
 
 ## merged gene set
-# gene_uni = set(ct_enhancer_normed.index) & set(tpm_normed.index)
-gene_uni = de_genes
+# gene_uni = tpm.index.to_list()
+gene_uni = set(gennehancer.index) & set(tpm.index)
 
 
 # pathways

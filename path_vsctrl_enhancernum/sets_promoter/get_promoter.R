@@ -13,7 +13,7 @@ source("rush_promo.R")
 src <- src_ucsc("Homo sapiens")
 
 ## list gene sets and ctrls
-setfiles <- list.files("../ctrlsets/", pattern = "*.txt")
+setfiles <- list.files("../ctrlsets/", pattern = "*_ctrl_genes.txt")
 
 sets <- lapply(setfiles, function(file) read.table(paste0("../ctrlsets/", file), sep = "\t",  header = T))
 names(sets) <- str_split(setfiles, "_ct", simplify = T)[,1]
@@ -29,14 +29,13 @@ for (i in 1:length(sets)) {
     prom <- rush_promo(db = src, upstream = 1000, downstream = 0, genes = genelist, sequence = F)
     rtracklayer::export.bed(unlist(prom), paste0("prom_bed/", setname, "_prom_1k.bed"))
 
-
     for (j in 1:(ncol(sets[[i]])-1)) {
         ctrlset <- sets[[i]][,j]
     
         prom <- rush_promo(db = src, upstream = 1000, downstream = 0, genes = ctrlset, sequence = F)
         rtracklayer::export.bed(unlist(prom), paste0("prom_bed/", setname, "_", colnames(sets[[i]])[j], "_prom_1k.bed"))
-        
-
 
     }
+    
+
 }
