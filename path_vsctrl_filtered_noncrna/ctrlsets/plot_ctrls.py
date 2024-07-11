@@ -16,7 +16,7 @@ matplotlib.rcParams['ps.fonttype'] = 42
 
 ## load tpm
 # filtered TPM
-tpm = pd.read_csv('tpm_symbol_filtered.txt', header=0, index_col=0, sep='\t')
+tpm = pd.read_csv('tpm_symbol_filtered_noncrna.txt', header=0, index_col=0, sep='\t')
 
 
 ## log2tpm
@@ -33,8 +33,6 @@ gennehancer.set_index(gennehancer[4], inplace=True)
 # stats of enhancer count
 enhancer_count = gennehancer.index.value_counts().to_dict()
 
-# export enhancer count
-gennehancer.index.value_counts().to_csv('genehancer_hg38_enhancer_count.txt', sep='\t', header=False)
 
 
 ## load ctrl gene tables
@@ -74,6 +72,13 @@ for pn in pathname:
 
     count_df.index = ctrl_genes[f'{pn}']
     count_df = count_df[[f'{pn}','ctrl1', 'ctrl2', 'ctrl3', 'ctrl4', 'ctrl5']]
+    
+    # merge count and gene names
+    enhancer_cntdf = pd.merge(ctrl_genes, count_df, left_on=f'{pn}', right_index=True, how='inner', suffixes=('_symbol', '_enhancer_n'))
+    enhancer_cntdf.drop(columns=[f'{pn}_symbol'], inplace=True)
+    enhancer_cntdf = enhancer_cntdf[[f'{pn}', f'{pn}_enhancer_n', 'ctrl1_symbol', 'ctrl1_enhancer_n', 'ctrl2_symbol', 'ctrl2_enhancer_n', 'ctrl3_symbol', 'ctrl3_enhancer_n', 'ctrl4_symbol', 'ctrl4_enhancer_n', 'ctrl5_symbol', 'ctrl5_enhancer_n']]
+    enhancer_cntdf.to_csv(f'{pn}_enhancer_count.txt', sep='\t', index=False)
+
 
 
     ## combine 5 controls
@@ -85,11 +90,6 @@ for pn in pathname:
     plot_df_mergedcrtl.set = plot_df_mergedcrtl.set.replace({0: 'ctrl'})
     plot_df_mergedcrtl.set = plot_df_mergedcrtl.set.str.split('_').str[0]
 
-    # merge count and gene names
-    enhancer_cntdf = pd.merge(ctrl_genes, count_df, left_on=f'{pn}', right_index=True, how='inner', suffixes=('_symbol', '_enhancer_n'))
-    enhancer_cntdf.drop(columns=[f'{pn}_symbol'], inplace=True)
-    enhancer_cntdf = enhancer_cntdf[[f'{pn}', f'{pn}_enhancer_n', 'ctrl1_symbol', 'ctrl1_enhancer_n', 'ctrl2_symbol', 'ctrl2_enhancer_n', 'ctrl3_symbol', 'ctrl3_enhancer_n', 'ctrl4_symbol', 'ctrl4_enhancer_n', 'ctrl5_symbol', 'ctrl5_enhancer_n']]
-    enhancer_cntdf.to_csv(f'{pn}_enhancer_count.txt', sep='\t', index=False)
 
 
     ## plot the violin plot
