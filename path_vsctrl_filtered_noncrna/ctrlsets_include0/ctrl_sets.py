@@ -195,6 +195,9 @@ MYC_V2 = ['AIMP2','BYSL','CBX3','CDK4','DCTPP1','DDX18','DUSP2','EXOSC5','FARSA'
 PRC2_targ = pd.read_csv('PRC2_targets.txt', header=None, index_col=None, sep='\t')[0].to_list()
 
 
+pancreatic_neoplasia = pd.read_csv('pancreatic_neoplasia.txt', header=None, index_col=None, sep='\t')[0].to_list()
+
+
 ## slecting random geens from control d1
 def euclidean_distance(row1, row2):
     return np.sqrt(np.sum((row1 - row2) ** 2))
@@ -203,14 +206,13 @@ def euclidean_distance(row1, row2):
 all_d1ctrl = tpm.loc[gene_uni,tpm.columns.str.contains('Day1_C')]
 
 for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRANSITION', 'INTERFERON_GAMMA_RESPONSE', 'E2F_TARGETS',
-           'HEDGEHOG', 'MYC_V1', 'MYC_V2', 'PRC2_targ']:
+           'HEDGEHOG', 'MYC_V1', 'MYC_V2', 'PRC2_targ', 'pancreatic_neoplasia']:
     
     path = eval(pn)
 
     path = [x for x in path if x in gene_uni]
 
     path_base_d1 = tpm.loc[path,tpm.columns.str.contains('Day1_C')]
-
     ctrl_sets = []
     for i in range(path_base_d1.shape[0]):
         distances = all_d1ctrl.apply(lambda row: euclidean_distance(row.values, path_base_d1.iloc[[i]].values), axis=1)
