@@ -34,7 +34,6 @@ for m in glob.glob('../*.promoter.3k.gz'):
     group_boundaries = int(meta.decode("utf-8").split('":')[20].split(',"')[0].split(',')[1])
     sample_boundaries = int(meta.decode("utf-8").split('":')[22].split(',')[1])
 
-
     # Define splits
     row_splits = [slice(None, group_boundaries), slice(group_boundaries, None)]
     col_splits = [slice(None, sample_boundaries), slice(sample_boundaries, None)]
