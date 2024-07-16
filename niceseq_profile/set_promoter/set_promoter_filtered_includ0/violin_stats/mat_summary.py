@@ -199,7 +199,7 @@ for m in glob.glob('../*.promoter.3k.gz'):
             )
 
 
-    g.set_ylabels('NiCE-seq density (log transformed)')
+    g.set_ylabels('NiCE-seq density (log scale)')
 
     g.fig.suptitle(f'{pn}', y=1.02, fontsize=12)
 
