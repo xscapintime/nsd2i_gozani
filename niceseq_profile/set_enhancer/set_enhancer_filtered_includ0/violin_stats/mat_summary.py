@@ -11,6 +11,7 @@ from statannotations.Annotator import Annotator
 from matplotlib import ticker as mticker
 
 
+
 plt.style.use('seaborn-poster')
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
@@ -23,14 +24,12 @@ def split_and_assign(df, row_split, col_split, row_group, col_group):
     return split_df
 
 
-for m in glob.glob('../*.promoter.3k.gz'):
-    pn = os.path.basename(m).replace('.promoter.3k.gz','')
+for m in glob.glob('../*.enhancer.5k.100b.gz'):
+    pn = os.path.basename(m).replace('.enhancer.5k.100b.gz','')
     day = pn.split('.')[1]
 
     ## load deeptools matrix
     df = pd.read_csv(m, header=None, skiprows=1,sep='\t')
-    # df['gene'] = df[3].str.split('.').str[0]
-    # df.groupby('gene').mean()
 
     ## meta data
     with gzip.open(m, 'rb') as f:
@@ -55,12 +54,10 @@ for m in glob.glob('../*.promoter.3k.gz'):
     df_combined = pd.DataFrame(np.vstack([pd.concat([split_dfs[0], split_dfs[2]], axis=0),
                             pd.concat([split_dfs[1], split_dfs[3]], axis=0).values]))
     
-    # average the center 500bp
-    df_center = pd.concat([df_combined.iloc[:, 55:65].mean(axis=1), df_combined.iloc[:,120:]], axis=1)
-    
+    df_center = pd.concat([df_combined.iloc[:, 45:55].mean(axis=1), df_combined.iloc[:,100:]], axis=1)
 
-    long_df = pd.melt(df_center, id_vars=[120, 121], var_name='column', value_name='value')
-    long_df = long_df.rename(columns={120: 'set', 121: 'trt'})
+    long_df = pd.melt(df_center, id_vars=[100, 101], var_name='column', value_name='value')
+    long_df = long_df.rename(columns={100: 'set', 101: 'trt'})
     long_df['value'] = long_df.value.astype(float)
 
     long_df['set'] = long_df['set'].apply(lambda x: x.split('_')[0])
@@ -70,9 +67,8 @@ for m in glob.glob('../*.promoter.3k.gz'):
 
     long_df['logvalue'] = np.log10(long_df['value'])
 
-
     ## plot
-    g = sns.catplot(data=long_df, kind="violin",palette=["#7CCD7C", "#CDC9C9"],
+    g = sns.catplot(data=long_df, kind="violin",palette=["#87CEFA", "#CDC9C9"],
                 x='set', y='value', col='trt',
                 saturation=0.7, linewidth=.3, inner='box',
                 aspect=.8)
@@ -84,7 +80,7 @@ for m in glob.glob('../*.promoter.3k.gz'):
         'plot_params': { # this takes what normally goes into sns.barplot etc.
             'x': 'set',
             'y': 'value',
-            'palette':["#7CCD7C", "#CDC9C9"]
+            'palette':["#87CEFA", "#CDC9C9"]
         },
         'annotation_func': 'apply_test', # has three options
         'configuration': {'test': 'Mann-Whitney', 'text_format' :'full'}, # this takes what normally goes into ant.configure
@@ -94,7 +90,7 @@ for m in glob.glob('../*.promoter.3k.gz'):
     g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
 
 
-    # add mean
+    # add median
     # Iterate over each subplot
     for ax in g.axes.flat:
         # Get the data for this subplot
@@ -129,13 +125,15 @@ for m in glob.glob('../*.promoter.3k.gz'):
 
     g.fig.suptitle(f'{pn}', y=1.02, fontsize=12)
 
-    plt.savefig(f'{pn}_tss_central500bp_nice.pdf', bbox_inches='tight')
+    plt.savefig(f'{pn}_enhancer_central1kbp_nice.pdf', bbox_inches='tight')
     plt.close()
     
 
 
+
+
     ## log transfrom
-    g = sns.catplot(data=long_df, kind="violin",palette=["#7CCD7C", "#CDC9C9"],
+    g = sns.catplot(data=long_df, kind="violin",palette=["#87CEFA", "#CDC9C9"],
                 x='set', y='logvalue', col='trt',
                 saturation=0.7, linewidth=.3, inner='box',
                 aspect=.8)
@@ -147,7 +145,7 @@ for m in glob.glob('../*.promoter.3k.gz'):
         'plot_params': { # this takes what normally goes into sns.barplot etc.
             'x': 'set',
             'y': 'logvalue',
-            'palette':["#7CCD7C", "#CDC9C9"]
+            'palette':["#87CEFA", "#CDC9C9"]
         },
         'annotation_func': 'apply_test', # has three options
         'configuration': {'test': 'Mann-Whitney', 'text_format' :'full'}, # this takes what normally goes into ant.configure
@@ -203,7 +201,7 @@ for m in glob.glob('../*.promoter.3k.gz'):
 
     g.fig.suptitle(f'{pn}', y=1.02, fontsize=12)
 
-    plt.savefig(f'{pn}_tss_central500bp_nice_log.pdf', bbox_inches='tight')
+    plt.savefig(f'{pn}_enhancer_central1kbp_nice_log.pdf', bbox_inches='tight')
     plt.close()
     
 
@@ -219,3 +217,4 @@ for m in glob.glob('../*.promoter.3k.gz'):
 
 
 
+    
