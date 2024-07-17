@@ -48,7 +48,7 @@ tpm = tpm.loc[genes_postfilt]
 tpm_noncrna = tpm[~tpm.index.str.contains('^FAM.*P|ELOCP|BLOC1S2P1|BLOC1S6P1|^LINC0|^MIR|^RNU|^MT-|^MTND|^MTCO|^MTAT|-AS.$|-AS$|\.')]
 
 # export
-tpm_noncrna.to_csv('tpm_symbol_filtered_noncrna.txt', sep='\t')
+# tpm_noncrna.to_csv('tpm_symbol_filtered_noncrna.txt', sep='\t')
 
 
 ## load enhancer annotaion to get the genes that eventually will be using
@@ -196,6 +196,8 @@ PRC2_targ = pd.read_csv('PRC2_targets.txt', header=None, index_col=None, sep='\t
 
 
 pancreatic_neoplasia = pd.read_csv('pancreatic_neoplasia.txt', header=None, index_col=None, sep='\t')[0].to_list()
+
+pancreatic_neoplasia_suppressed = pd.read_csv('pancreatic_neoplasia_suppressed.txt', header=None, index_col=None, sep='\t')[0].to_list()
 
 
 ## slecting random geens from control d1
