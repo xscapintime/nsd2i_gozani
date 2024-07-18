@@ -102,7 +102,7 @@ for pn in pathname:
                   color='black', alpha=0.3, dodge=True, size=2)
 
     df_mean = plot_df_mergedcrtl.groupby('set', sort=False)['enhancer_n'].mean()
-    _ = [g.hlines(y, i-.12, i+.12, zorder=2, colors='white', linewidth=2) for i, y in df_mean.reset_index()['enhancer_n'].items()]
+    _ = [g.hlines(y, i-.12, i+.12, zorder=2, colors='#FFD700', linestyle=':', linewidth=1.5) for i, y in df_mean.reset_index()['enhancer_n'].items()]
 
     nobs = ["mean: " + str(f"{i:.2f}") for i in df_mean.to_list()]
 
@@ -122,7 +122,7 @@ for pn in pathname:
     comb = [tuple(set(plot_df_mergedcrtl.set))]
 
     annotator = Annotator(g, comb, data=plot_df_mergedcrtl, x='set', y='enhancer_n')
-    annotator.configure(test="t-test_welch", text_format="full",loc='inside')
+    annotator.configure(test="Wilcoxon", text_format="full",loc='inside')
     annotator.apply_and_annotate()
 
     plt.savefig(f'{pn}_enhancer_count_violin_mergedctrl.pdf', bbox_inches='tight')

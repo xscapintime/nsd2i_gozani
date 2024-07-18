@@ -13,7 +13,7 @@ source("rush_promo.R")
 src <- src_ucsc("Homo sapiens")
 
 ## list gene sets and ctrls
-setfiles <- list.files("../ctrlsets_include0/", pattern = "*_ctrl_genes.txt")
+setfiles <- list.files("../ctrlsets_include0/", pattern = "_ctrl_genes.txt")
 
 sets <- lapply(setfiles, function(file) read.table(paste0("../ctrlsets_include0/", file), sep = "\t",  header = T))
 names(sets) <- str_split(setfiles, "_ct", simplify = T)[,1]

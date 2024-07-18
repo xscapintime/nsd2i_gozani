@@ -1,4 +1,4 @@
-for f in *.gz
+for f in PRC*.gz
 do
 
 	bn=`basename $f | sed "s/.gz//g"`
@@ -39,13 +39,18 @@ do
 	elif [[ $bn =~ "MYC_V2" ]];then
                 ymax=0.115
                 ymin=0.044
+        
+        # elif [[ $bn =~ "pancreatic_neoplasia_suppressed" ]];then
+        #         ymax=0.073
+        #         ymin=0.043
 
         elif [[ $bn =~ "pan" ]];then
                 ymax=0.077
                 ymin=0.042
-        
+
+
      	elif [[ $bn =~ "PRC" ]];then
-                ymax=0.07
+                ymax=0.074
                 ymin=0.038
 
 

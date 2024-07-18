@@ -192,7 +192,8 @@ MYC_V2 = ['AIMP2','BYSL','CBX3','CDK4','DCTPP1','DDX18','DUSP2','EXOSC5','FARSA'
           'UNG','UTP20','WDR43','WDR74']
 
 
-PRC2_targ = pd.read_csv('PRC2_targets.txt', header=None, index_col=None, sep='\t')[0].to_list()
+#PRC2_targ = pd.read_csv('PRC2_targets.txt', header=None, index_col=None, sep='\t')[0].to_list()
+PRC2_targ = pd.read_csv('prc2.targets.500.txt', header=None, index_col=None, sep='\t')[0].to_list()
 
 
 pancreatic_neoplasia = pd.read_csv('pancreatic_neoplasia.txt', header=None, index_col=None, sep='\t')[0].to_list()

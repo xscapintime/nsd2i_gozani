@@ -43,7 +43,7 @@ do
 
 
      	elif [[ $bn =~ "PRC" ]];then
-                ymax=0.57
+                ymax=0.62
                 zmax=0.75
 
 	fi

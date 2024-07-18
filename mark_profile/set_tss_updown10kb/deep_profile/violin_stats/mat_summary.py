@@ -71,65 +71,65 @@ for m in glob.glob('../*.tss.10k.gz'):
 
 
     ## plot
-    g = sns.catplot(data=long_df, kind="violin",palette=["#4682B4", "#CDC9C9"],
-                x='set', y='value', col='trt',
-                saturation=0.7, linewidth=.3, inner='box',
-                aspect=.8)
-    # stats
-    pairs = [tuple(set(long_df.set))]
+    # g = sns.catplot(data=long_df, kind="violin",palette=["#4682B4", "#CDC9C9"],
+    #             x='set', y='value', col='trt',
+    #             saturation=0.7, linewidth=.3, inner='box',
+    #             aspect=.8)
+    # # stats
+    # pairs = [tuple(set(long_df.set))]
 
-    ant = Annotator(None, pairs)
-    kwargs = {
-        'plot_params': { # this takes what normally goes into sns.barplot etc.
-            'x': 'set',
-            'y': 'value',
-            'palette':["#4682B4", "#CDC9C9"]
-        },
-        'annotation_func': 'apply_test', # has three options
-        'configuration': {'test': 'Mann-Whitney', 'text_format' :'full'}, # this takes what normally goes into ant.configure
-        'plot': 'violinplot'
-    }
+    # ant = Annotator(None, pairs)
+    # kwargs = {
+    #     'plot_params': { # this takes what normally goes into sns.barplot etc.
+    #         'x': 'set',
+    #         'y': 'value',
+    #         'palette':["#4682B4", "#CDC9C9"]
+    #     },
+    #     'annotation_func': 'apply_test', # has three options
+    #     'configuration': {'test': 'Mann-Whitney', 'text_format' :'full'}, # this takes what normally goes into ant.configure
+    #     'plot': 'violinplot'
+    # }
 
-    g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
+    # g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
 
 
-    # add mean
-    # Iterate over each subplot
-    for ax in g.axes.flat:
-        # Get the data for this subplot
-        data = long_df[
-            (long_df['trt'] == ax.get_title().split('=')[1].strip()) #&
-            # (plot_df['trt'] == ax.get_title().split('|')[0].split('=')[1].strip())
-        ]
+    # # add mean
+    # # Iterate over each subplot
+    # for ax in g.axes.flat:
+    #     # Get the data for this subplot
+    #     data = long_df[
+    #         (long_df['trt'] == ax.get_title().split('=')[1].strip()) #&
+    #         # (plot_df['trt'] == ax.get_title().split('|')[0].split('=')[1].strip())
+    #     ]
 
-        # Iterate over each category in the x-axis
-        for category in data['set'].unique():
-            subset = data[data['set'] == category]
-            mean_val = subset['value'].mean()
+    #     # Iterate over each category in the x-axis
+    #     for category in data['set'].unique():
+    #         subset = data[data['set'] == category]
+    #         mean_val = subset['value'].mean()
 
-            # Get the position of the category on the x-axis
-            x_position = data['set'].unique().tolist().index(category)
+    #         # Get the position of the category on the x-axis
+    #         x_position = data['set'].unique().tolist().index(category)
 
-            # Draw a short horizontal line at the mean value
-            ax.plot([x_position - 0.2, x_position + 0.2], [mean_val, mean_val], color='#FFD700', linestyle=':', linewidth=1.5)
+    #         # Draw a short horizontal line at the mean value
+    #         ax.plot([x_position - 0.2, x_position + 0.2], [mean_val, mean_val], color='#FFD700', linestyle=':', linewidth=1.5)
 
-            # Annotate the mean value
-            ax.text(
-                x=x_position,
-                y=mean_val,
-                s=f'mean={mean_val:.2f}',
-                color='black',
-                ha='center',
-                va='bottom',
-                fontsize='small'
-            )
+    #         # Annotate the mean value
+    #         ax.text(
+    #             x=x_position,
+    #             y=mean_val,
+    #             s=f'mean={mean_val:.2f}',
+    #             color='black',
+    #             ha='center',
+    #             va='bottom',
+    #             fontsize='small'
+    #         )
 
-    g.set_ylabels('H3K27me3')
+    # g.set_ylabels('H3K27me3')
 
-    g.fig.suptitle(f'{pn}', y=1.02, fontsize=12)
+    # g.fig.suptitle(f'{pn}', y=1.02, fontsize=12)
 
-    plt.savefig(f'{pn}_tss_central4.8kbp_k27me3.pdf', bbox_inches='tight')
-    plt.close()
+    # plt.savefig(f'{pn}_tss_central4.8kbp_k27me3.pdf', bbox_inches='tight')
+    # plt.close()
     
 
 

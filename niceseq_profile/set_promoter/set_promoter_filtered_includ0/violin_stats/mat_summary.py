@@ -23,7 +23,7 @@ def split_and_assign(df, row_split, col_split, row_group, col_group):
     return split_df
 
 
-for m in glob.glob('../*.promoter.3k.gz'):
+for m in glob.glob('../PRC*.promoter.3k.gz'):
     pn = os.path.basename(m).replace('.promoter.3k.gz','')
     day = pn.split('.')[1]
 
