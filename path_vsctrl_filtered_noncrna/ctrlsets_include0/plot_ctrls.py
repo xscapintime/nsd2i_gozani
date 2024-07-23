@@ -296,6 +296,8 @@ for pn in pathname:
     # keep the base expresison only
     plotdat = mergedctrl_tpm[(mergedctrl_tpm['day'] == 'Day1') & (mergedctrl_tpm['trt'] == 'C')]
 
+    plotdat.geneset = pd.Categorical(plotdat.geneset, categories=[f'{pn}'.split('_')[0], 'ctrl'], ordered=True)
+
     ## plot
     plt.figure(figsize=(4, 5))
     g = sns.violinplot(data=plotdat, x='geneset', y=0,

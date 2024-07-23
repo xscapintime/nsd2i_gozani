@@ -8,17 +8,17 @@ do
 
 	#if [[ $bn =~ "d5"  ]];then
 
-		#samples=`gunzip -c $f | head -n 1 | cut -d "[" -f 11 | cut -d "]" -f 1 | sed 's/"//g' |  sed "s/,/ /g" | sed "s/_merged//g" | sed "s/.ms_cpm//g"`
+		samples=`gunzip -c $f | head -n 1 | cut -d "[" -f 11 | cut -d "]" -f 1 | sed 's/"//g' |  sed "s/,/ /g" | sed "s/_merged//g" | sed "s/.ms_cpm//g"`
 
 	#else
-		samples=`gunzip -c $f | head -n 1 | cut -d "[" -f 11 | cut -d "]" -f 1 | sed 's/"//g' |  sed "s/,/ /g" | sed "s/.MSnorm//g" | sed "s/_H/.H/g"`
+		#samples=`gunzip -c $f | head -n 1 | cut -d "[" -f 11 | cut -d "]" -f 1 | sed 's/"//g' |  sed "s/,/ /g" | sed "s/.MSnorm//g" | sed "s/_H/.H/g"`
 
 	#fi
 
 
 	plotProfile -m $f -o $bn.prof.pdf --refPointLabel 'TSS' \
 	--regionsLabel "Gene set" "Controls" \
-	--colors "#B3EE3A" "#CDC9C9" \
+	--colors "#00C5CD" "#CDC9C9" \
 	--plotWidth 7 --plotTitle $regions \
 	--samplesLabel $samples
 	#--yMin $ymin --yMax $ymax
