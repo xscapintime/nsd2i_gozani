@@ -64,7 +64,7 @@ for pn in pathname:
     all_sets_raw['log2'] = np.log2(all_sets_raw[0]+1)
 
 
-    ## count enhancers
+    ### count enhancers ###
     count_df = pd.DataFrame()
 
     for column in ctrl_genes.columns:
@@ -77,7 +77,7 @@ for pn in pathname:
     enhancer_cntdf = pd.merge(ctrl_genes, count_df, left_on=f'{pn}', right_index=True, how='inner', suffixes=('_symbol', '_enhancer_n'))
     enhancer_cntdf.drop(columns=[f'{pn}_symbol'], inplace=True)
     enhancer_cntdf = enhancer_cntdf[[f'{pn}', f'{pn}_enhancer_n', 'ctrl1_symbol', 'ctrl1_enhancer_n', 'ctrl2_symbol', 'ctrl2_enhancer_n', 'ctrl3_symbol', 'ctrl3_enhancer_n', 'ctrl4_symbol', 'ctrl4_enhancer_n', 'ctrl5_symbol', 'ctrl5_enhancer_n']]
-    enhancer_cntdf.to_csv(f'{pn}_enhancer_count.txt', sep='\t', index=False)
+    # enhancer_cntdf.to_csv(f'{pn}_enhancer_count.txt', sep='\t', index=False)
 
 
 
@@ -281,3 +281,52 @@ for pn in pathname:
     # plt.close()
 
 
+    ## tpm of target vs merged ctrls
+    # map control genes to ref genes
+    mapping_list =  [ dict(zip(ctrl_genes[ctrl], ctrl_genes[pn])) for ctrl in ctrl_genes.columns[:-1] ]
+    mapping_dict = {k: v for d in mapping_list for k, v in d.items()}
+
+    all_sets_raw['refgene'] = all_sets_raw.symbol.map(mapping_dict)
+    all_sets_raw.loc[all_sets_raw['geneset'] == f'{pn}'.split('_')[0], 'refgene'] = all_sets_raw['symbol']
+    all_sets_raw.loc[all_sets_raw['geneset'] != f'{pn}'.split('_')[0], 'geneset'] = 'ctrl'
+
+    # merge controls by refgene
+    mergedctrl_tpm = all_sets_raw.groupby(['refgene', 'day', 'trt', 'geneset']).mean().reset_index()
+
+    # keep the base expresison only
+    plotdat = mergedctrl_tpm[(mergedctrl_tpm['day'] == 'Day1') & (mergedctrl_tpm['trt'] == 'C')]
+
+    ## plot
+    plt.figure(figsize=(4, 5))
+    g = sns.violinplot(data=plotdat, x='geneset', y=0,
+                   palette = ["#CD9B9B", "#CDC9C9" ],
+                   saturation=0.9, linewidth=1, inner='box')
+
+    g = sns.stripplot(data=plotdat, x="geneset", y=0, jitter=True,
+                  color='black', alpha=0.3, dodge=True, size=2)
+
+    df_mean = plotdat.groupby('geneset', sort=False)[0].mean()
+    _ = [g.hlines(y, i-.12, i+.12, zorder=2, colors='#FFD700', linestyle=':', linewidth=1.5) for i, y in df_mean.reset_index()[0].items()]
+
+    nobs = ["mean=" + str(f"{i:.2f}") for i in df_mean.to_list()]
+
+    pos = range(len(nobs))
+    for tick, label in zip(pos, g.get_xticklabels()):
+       g.text(pos[tick], df_mean[tick] + 1, nobs[tick],
+                horizontalalignment='center',
+                size='small',
+                color='black')
+
+    # plt.ylim([-4.99, None])
+    plt.ylabel('TPM')
+    plt.xlabel('')
+    plt.title(f'{pn}', fontdict={'fontsize':7})
+
+    # stats
+    comb = [tuple(set(plotdat.geneset))]
+
+    annotator = Annotator(g, comb, data=plotdat, x='geneset', y=0)
+    annotator.configure(test="Wilcoxon", text_format="full",loc='inside')
+    annotator.apply_and_annotate()
+
+    plt.savefig(f'{pn}_TPM_mergedctrl_d1veh.pdf', bbox_inches='tight')
