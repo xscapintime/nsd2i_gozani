@@ -155,14 +155,25 @@ for m in glob.glob('../*.tss.10k.gz'):
 
     g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
 
+    if 'EP' in pn or 'KRAS' in pn:
+        ylmax=2.89
+        ylmin=-1.89
+    elif 'PRC' in pn or 'pan' in pn:
+        ylmax=2.99
+        ylmin=-3.45
+
+    print(pn, ylmin, ylmax)
+    g.set(ylim=(ylmin,ylmax))
+
     for ax in g.axes.flat:
         ax.yaxis.set_major_formatter(mticker.StrMethodFormatter("$10^{{{x:.0f}}}$"))
         ymin, ymax = ax.get_ylim()
-        tick_range = np.arange(np.floor(ymin), ymax)
-        tick_range = np.arange(np.floor(ymin), ymax)
-        ax.yaxis.set_ticks(tick_range)
+        
+        # tick_range = np.arange(np.floor(ymin), ymax)
+        tick_range = np.arange(ymin, ymax)
+        
+        # ax.yaxis.set_ticks(tick_range)
         ax.yaxis.set_ticks([np.log10(x) for p in tick_range for x in np.linspace(10 ** p, 10 ** (p + 1), 10)], minor=True)
-
 
 
     # add mean

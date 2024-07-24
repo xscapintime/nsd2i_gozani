@@ -155,15 +155,15 @@ for m in glob.glob('../*.tss.10k.gz'):
 
     g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
 
+    g.set(ylim=(-3.55,2.99))
+
     for ax in g.axes.flat:
         ax.yaxis.set_major_formatter(mticker.StrMethodFormatter("$10^{{{x:.0f}}}$"))
         ymin, ymax = ax.get_ylim()
-        tick_range = np.arange(np.floor(ymin), ymax)
-        tick_range = np.arange(np.floor(ymin), ymax)
-        ax.yaxis.set_ticks(tick_range)
+        # tick_range = np.arange(np.floor(ymin), ymax)
+        tick_range = np.arange(ymin, ymax)
+        # ax.yaxis.set_ticks(tick_range)
         ax.yaxis.set_ticks([np.log10(x) for p in tick_range for x in np.linspace(10 ** p, 10 ** (p + 1), 10)], minor=True)
-
-
 
     # add mean
     # Iterate over each subplot
@@ -197,24 +197,10 @@ for m in glob.glob('../*.tss.10k.gz'):
                 fontsize='small'
             )
 
-
     g.set_ylabels('H3K27me3 (log scale)')
 
-    g.fig.suptitle(f'{pn}', y=1.02, fontsize=12)
+    g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
 
     plt.savefig(f'{pn}_tss_central4.8kbp_k27me3_log.pdf', bbox_inches='tight')
     plt.close()
     
-
-
-
-
-
-
-
-
-
-
-
-
-
