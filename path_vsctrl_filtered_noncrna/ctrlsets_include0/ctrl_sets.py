@@ -198,7 +198,7 @@ PRC2_targ = pd.read_csv('prc2.targets.500.txt', header=None, index_col=None, sep
 
 pancreatic_neoplasia = pd.read_csv('pancreatic_neoplasia.txt', header=None, index_col=None, sep='\t')[0].to_list()
 
-pancreatic_neoplasia_suppressed = pd.read_csv('pancreatic_neoplasia_suppressed.txt', header=None, index_col=None, sep='\t')[0].to_list()
+#pancreatic_neoplasia_suppressed = pd.read_csv('pancreatic_neoplasia_suppressed.txt', header=None, index_col=None, sep='\t')[0].to_list()
 
 
 ## slecting random geens from control d1
@@ -231,6 +231,38 @@ for pn in ['KRAS_SIGNALING_UP', 'KRAS_SIGNALING_DN', 'EPITHELIAL_MESENCHYMAL_TRA
 
     ctrl_genes.columns = ['ctrl1','ctrl2','ctrl3','ctrl4','ctrl5']
     ctrl_genes[f'{pn}'] = path
+
+    # in case there're duplicates in 'ctrlx'
+    ########## GIVE UP finding new genes ###########
+    ########## solve duplicates later ##############
+    # for col in ctrl_genes.columns:
+    # # Find all duplicated elements (excluding the first occurrence)
+    #     duplicated_indices = ctrl_genes.index[ctrl_genes[col].duplicated()]
+    #     # print(duplicated_indices)
+
+    #     if not duplicated_indices.empty:
+    #         print(duplicated_indices)
+    #         # print(ctrl_genes[col][duplicated_indices])
+    #         refg = ctrl_genes[pn][duplicated_indices]
+    #         # print(refg)
+    #         newd_distance = np.argsort(all_d1ctrl.apply(lambda row: euclidean_distance(row.values, path_base_d1.loc[refg].values), axis=1))
+
+    #         thesixth = [idx for idx in newd_distance if all_d1ctrl.index[idx] in gene_uni][6]
+
+    #         print(all_d1ctrl.index[thesixth])
+
+    #         ctrl_genes.loc[duplicated_indices, col] = all_d1ctrl.index[thesixth]
+
+    
+    # ## check again see if 6th works
+    # for col in ctrl_genes.columns:
+    # # Find all duplicated elements (excluding the first occurrence)
+    #     duplicated_indices = ctrl_genes.index[ctrl_genes[col].duplicated()]
+    #     # print(duplicated_indices)
+
+    #     if not duplicated_indices.empty:
+    #         print(duplicated_indices)
+
 
     # save to file
     ctrl_genes.to_csv(f'{pn}_ctrl_genes.txt', index=False, sep='\t')
