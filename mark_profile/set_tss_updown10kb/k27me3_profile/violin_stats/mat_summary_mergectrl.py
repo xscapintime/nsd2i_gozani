@@ -11,28 +11,28 @@ from statannotations.Annotator import Annotator
 from matplotlib import ticker as mticker
 
 
-plt.style.use('seaborn-poster')
+# plt.style.use('seaborn-poster')
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
 
 
-def append_suffix_to_duplicates(column):
-    # Create a dictionary to track counts for each duplicate value
-    value_counts = {}
+# def append_suffix_to_duplicates(column):
+#     # Create a dictionary to track counts for each duplicate value
+#     value_counts = {}
     
-    # Iterate over each value in the column
-    for idx, value in column.items():
-        if value not in value_counts:
-            value_counts[value] = 0  # Initialize the count
+#     # Iterate over each value in the column
+#     for idx, value in column.items():
+#         if value not in value_counts:
+#             value_counts[value] = 0  # Initialize the count
         
-        value_counts[value] += 1  # Increment the count
+#         value_counts[value] += 1  # Increment the count
         
-        # If it's a duplicate (count > 1), append the suffix
-        if value_counts[value] > 1:
-            column.at[idx] = f"{value}.{value_counts[value] - 1}"
+#         # If it's a duplicate (count > 1), append the suffix
+#         if value_counts[value] > 1:
+#             column.at[idx] = f"{value}.{value_counts[value] - 1}"
     
-    return column
+#     return column
 
 
 def split_and_assign(df, row_split, col_split, row_group, col_group):
@@ -73,8 +73,21 @@ for m in glob.glob('../*.tss.10k.gz'):
 
 
     ### merge 5 controls and promoters based ref gene
-    mapping_dict = {ctrl: dict(zip(set_df[ctrl], set_df[pn])) for ctrl in set_df.columns[:-1]}
-    mapping_dict = {k: v for sub_dict in mapping_dict.values() for k, v in sub_dict.items()}
+    # mapping_dict = {ctrl: dict(zip(set_df[ctrl], set_df[pn])) for ctrl in set_df.columns[:-1]}
+    # mapping_dict = {k: v for sub_dict in mapping_dict.values() for k, v in sub_dict.items()}
+    control_to_ref = {}
+
+    # Loop through dataframe to populate the dictionary
+    for index, row in set_df.iterrows():
+        ref_gene = row[pn]
+        for control_col in set_df.columns[:-1]:
+            control_gene = row[control_col]
+            if control_gene not in control_to_ref:
+                control_to_ref[control_gene] = set()
+            control_to_ref[control_gene].add(ref_gene)
+
+    # Convert sets to lists for easier mapping later
+    control_to_ref = {key: list(value) for key, value in control_to_ref.items()}
 
 
     ## load deeptools matrix
@@ -104,7 +117,8 @@ for m in glob.glob('../*.tss.10k.gz'):
         split_df['gene'] = df.iloc[split_df.index, 3]
 
         if split_df['row_group'].unique()[0] == 'Controls':
-            split_df['refgene'] = split_df.gene.map(mapping_dict)
+            split_df['refgene'] = split_df.gene.map(control_to_ref)
+            # split_df['refgene'] = split_df['refgene'].apply(lambda refs: ', '.join(refs))
 
         else:
             split_df['refgene'] = split_df['gene']
@@ -118,9 +132,12 @@ for m in glob.glob('../*.tss.10k.gz'):
     # this will take the mean of all the genes 
     # df_center = pd.concat([df_combined.iloc[:, 38:62].mean(axis=1), df_combined.iloc[:,100:]], axis=1)
 
-    # average by genes in the geneset (refgene)
-    df_combined.drop(columns=[102], inplace=True)
-    df_center = pd.concat([df_combined.iloc[:, 38:63], df_combined.iloc[:,100:]], axis=1).groupby([100,101,103]).mean().reset_index()
+    ## average by genes in the geneset (refgene)
+    # explode the dataframe to create a row for each reference gene
+    df_exploded = df_combined.explode(103, ignore_index=True)
+    df_exploded = df_exploded.drop(columns=[102])
+    
+    df_center = pd.concat([df_exploded.iloc[:, 38:63], df_exploded.iloc[:,100:]], axis=1).groupby([100,101,103]).mean().reset_index()
 
     # mean of all the bins
     df_center = df_center.groupby([100, 101, 103]).apply(lambda group: group.iloc[:, 3:].mean().mean()).reset_index(name='mean') 
