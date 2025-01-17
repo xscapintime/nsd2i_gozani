@@ -200,12 +200,12 @@ for m in glob.glob('../../*.tss.10k.gz'):
                     fontsize='small'
                 )
 
-        g.set_ylabels('H3K27me3 (log scale)')
+        g.set_ylabels('H3K36me2 (log scale)')
         g.set_xlabels('')
 
         g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
 
-        plt.savefig(f'{pn}_{day}_tsscentral2.4kbp_27me3_log_{stat_me}.pdf', bbox_inches='tight')
+        plt.savefig(f'{pn}_{day}_tsscentral2.4kbp_k36me2_log_{stat_me}.pdf', bbox_inches='tight')
         plt.close()
 
 
@@ -266,10 +266,10 @@ for m in glob.glob('../../*.tss.10k.gz'):
                     fontsize='small'
                 )
 
-        g.set_ylabels('H3K27me3')
+        g.set_ylabels('H3K36me2')
         g.set_xlabels('')
 
         g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
 
-        plt.savefig(f'{pn}_{day}tsscentral2.4kbp_27me3_{stat_me}.pdf', bbox_inches='tight')
+        plt.savefig(f'{pn}_{day}tsscentral2.4kbp_k36me2_{stat_me}.pdf', bbox_inches='tight')
         plt.close()
