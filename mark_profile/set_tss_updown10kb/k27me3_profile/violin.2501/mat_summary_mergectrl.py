@@ -1,5 +1,6 @@
-## merged controls gene corresponding to the ref gene
-## each bin is 200 bp
+## do not merge 5 controls
+## central 25 bins --> 5.0kb
+
 
 import os,glob, gzip
 import math
@@ -28,12 +29,12 @@ def split_and_assign(df, row_split, col_split, row_group, col_group):
     return split_df
 
 
-for m in glob.glob('../../*.tss.10k.gz'):
+for m in glob.glob('../*.tss.10k.gz'):
     pn = os.path.basename(m).replace('.tss.10k.gz','').split('.')[0]
     day = os.path.basename(m).replace('.tss.10k.gz','').split('.')[1]
 
     ## load gene sets and ctrls table
-    set_df = pd.read_csv(os.path.join('../../../../../path_vsctrl_filtered_noncrna/ctrlsets_include0/', f'{pn}_ctrl_genes.txt'), sep='\t')
+    set_df = pd.read_csv(os.path.join('../../../../path_vsctrl_filtered_noncrna/ctrlsets_include0/', f'{pn}_ctrl_genes.txt'), sep='\t')
 
 
     ### merge 5 controls and promoters based ref gene
@@ -95,56 +96,27 @@ for m in glob.glob('../../*.tss.10k.gz'):
                             pd.concat([split_dfs[1], split_dfs[3]], axis=0).values]))
     
     # average the center 2.5kb，[:, 38:63] 25bins
-    # this will take the mean of all the genes 
-    # df_center = pd.concat([df_combined.iloc[:, 38:62].mean(axis=1), df_combined.iloc[:,100:]], axis=1)
-
-    ## average by genes in the geneset (refgene)
-    df_exploded = df_combined.drop(columns=[102])
-    
-    df_center = pd.concat([df_exploded.iloc[:, 38:63], df_exploded.iloc[:,100:]], axis=1).groupby([100,101,103]).mean().reset_index()
+    # drop refgene
+    df_combined.drop(103, axis=1, inplace=True)
+    df_center = pd.concat([df_combined.iloc[:, 38:63], df_combined.iloc[:,100:]], axis=1).groupby([100,101,102]).mean().reset_index()
 
     # mean of all the bins
-    df_center = df_center.groupby([100, 101, 103]).apply(lambda group: group.iloc[:, 3:].mean().mean()).reset_index(name='mean') 
+    df_center = df_center.groupby([100, 101, 102]).apply(lambda group: group.iloc[:, 3:].mean().mean()).reset_index(name='mean') 
 
-    # deeptools or extracting promoter might missed some genes
-    min_gene_count = df_center.groupby([100, 101])[103].nunique().min()
+    df_center['logvalue'] = np.log10(df_center['mean'] + 0.001)
+    df_center.columns = ['set', 'trt', 'gene', 'value', 'logvalue'] 
 
-    balanced_df = (
-        df_center.groupby([100, 101])
-        .apply(lambda group: group[group[103].isin(group[103].unique()[:min_gene_count])])
-        .reset_index(drop=True)
-    )
-
-
-    balanced_df = balanced_df.rename(columns={100: 'set', 101: 'trt',
-                                            103: 'refgene', 'mean': 'value'})
-
-    balanced_df['set'] = balanced_df['set'].apply(lambda x: x.split('_')[0])
-    balanced_df['set'] = pd.Categorical(balanced_df['set'], categories=['Controls', balanced_df['set'].unique()[balanced_df['set'].unique() != 'Controls'][0]], ordered=True)
-
-    # skip zero
-    # long_df = long_df[long_df['value'] != 0]
-    # long_df['value1p'] = long_df['value'] + 1
-    balanced_df['logvalue'] = np.log10(balanced_df['value'] + 0.001)
-
-    balanced_df['trt'] = pd.Categorical(balanced_df['trt'], categories=[f'vehicle.{day}', f'NSD2i.{day}'], ordered=True)
-
-    # ## to save the tables
-    # # remove the marker for the duplicated control genes
-    # df_center[103] = df_center[103].str.split('.').str[0]
-    # df_center.to_csv(f'{pn}.{day}.center500bp.refgene.txt', sep='\t', index=False)
-
-
-
+    df_center['trt'] = pd.Categorical(df_center['trt'], categories=[f'vehicle.{day}', f'NSD2i.{day}'], ordered=True)
+    df_center['set'] = df_center['set'].apply(lambda x: x.split('_')[0])
+    
     ## log transfrom
-
-    for stat_me in ['Mann-Whitney', 'Wilcoxon']:
-        g = sns.catplot(data=balanced_df, kind="violin",palette=["#edb9aa", "#7c84f4"],
+    for stat_me in ['Mann-Whitney']:
+        g = sns.catplot(data=df_center, kind="violin",palette=["#edb9aa", "#7c84f4"],
                     x='set', y='logvalue', col='trt',
                     saturation=0.7, linewidth=.1, inner='box',
                     aspect=.8)
         # stats
-        pairs = [tuple(set(balanced_df.set))]
+        pairs = [tuple(set(df_center.set))]
 
         ant = Annotator(None, pairs)
         kwargs = {
@@ -174,8 +146,8 @@ for m in glob.glob('../../*.tss.10k.gz'):
         # Iterate over each subplot
         for ax in g.axes.flat:
             # Get the data for this subplot
-            data = balanced_df[
-                (balanced_df['trt'] == ax.get_title().split('=')[1].strip()) #&
+            data = df_center[
+                (df_center['trt'] == ax.get_title().split('=')[1].strip()) #&
                 # (plot_df['trt'] == ax.get_title().split('|')[0].split('=')[1].strip())
             ]
 
@@ -209,70 +181,4 @@ for m in glob.glob('../../*.tss.10k.gz'):
         g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
 
         plt.savefig(f'{pn}_{day}_tsscentral5kbp_k27me3_log_{stat_me}.pdf', bbox_inches='tight')
-        plt.close()
-
-
-        # no log transfrom
-        g = sns.catplot(data=balanced_df, kind="violin",palette=["#edb9aa", "#7c84f4"],
-                    x='set', y='value', col='trt',
-                    saturation=0.7, linewidth=.1, inner='box',
-                    aspect=.8)
-        # stats
-        pairs = [tuple(set(balanced_df.set))]
-
-        ant = Annotator(None, pairs)
-        kwargs = {
-            'plot_params': { # this takes what normally goes into sns.barplot etc.
-                'x': 'set',
-                'y': 'value',
-                'palette':["#edb9aa", "#7c84f4"]
-            },
-            'annotation_func': 'apply_test', # has three options
-            'configuration': {'test': stat_me, 'text_format' :'full'}, # this takes what normally goes into ant.configure
-            'plot': 'violinplot'
-        }
-
-        g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
-
-        # g.set(ylim=(-3.55,2.99))
-
-        # add mean
-        # Iterate over each subplot
-        for ax in g.axes.flat:
-            # Get the data for this subplot
-            data = balanced_df[
-                (balanced_df['trt'] == ax.get_title().split('=')[1].strip()) #&
-                # (plot_df['trt'] == ax.get_title().split('|')[0].split('=')[1].strip())
-            ]
-
-            # Iterate over each category in the x-axis
-            for category in data['set'].unique():
-                subset = data[data['set'] == category]
-                mean_val = subset['value'].mean()
-                # logmean_val = subset['logvalue'].mean()
-
-                # Get the position of the category on the x-axis
-                x_position = data['set'].unique().tolist().index(category)
-
-                # Draw a short horizontal line at the mean value
-                ax.plot([x_position - 0.2, x_position + 0.2], [mean_val, mean_val],
-                    color='black', linestyle=':', linewidth=1.5)
-
-                # Annotate the mean value
-                ax.text(
-                    x=x_position,
-                    y=mean_val,
-                    s=f'mean={mean_val:.2f}',
-                    color='black',
-                    ha='center',
-                    va='bottom',
-                    fontsize='small'
-                )
-
-        g.set_ylabels('H3K27me3')
-        g.set_xlabels('')
-
-        g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
-
-        plt.savefig(f'{pn}_{day}tsscentral5kbp_k27me3_{stat_me}.pdf', bbox_inches='tight')
         plt.close()
