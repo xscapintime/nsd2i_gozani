@@ -28,12 +28,12 @@ def split_and_assign(df, row_split, col_split, row_group, col_group):
     return split_df
 
 
-for m in glob.glob('../*.tss.10k.gz'):
+for m in glob.glob('../../*.tss.10k.gz'):
     pn = os.path.basename(m).replace('.tss.10k.gz','').split('.')[0]
     day = os.path.basename(m).replace('.tss.10k.gz','').split('.')[1]
 
     ## load gene sets and ctrls table
-    set_df = pd.read_csv(os.path.join('../../../../path_vsctrl_filtered_noncrna/ctrlsets_include0/', f'{pn}_ctrl_genes.txt'), sep='\t')
+    set_df = pd.read_csv(os.path.join('../../../../../path_vsctrl_filtered_noncrna/ctrlsets_include0/', f'{pn}_ctrl_genes.txt'), sep='\t')
 
 
     ### merge 5 controls and promoters based ref gene
@@ -139,7 +139,8 @@ for m in glob.glob('../*.tss.10k.gz'):
 
     # ## log transfrom
 
-    for stat_me in ['Mann-Whitney', 'Wilcoxon']:
+    # for stat_me in ['Mann-Whitney', 'Wilcoxon']:
+    for stat_me in ['Wilcoxon']:
     #     g = sns.catplot(data=balanced_df, kind="violin",palette=["#edb9aa", "#7c84f4"],
     #                 x='set', y='logvalue', col='trt',
     #                 saturation=0.7, linewidth=.1, inner='box',
@@ -216,7 +217,7 @@ for m in glob.glob('../*.tss.10k.gz'):
         # no log transfrom
         g = sns.catplot(data=balanced_df, kind="violin",palette=["#edb9aa", "#7c84f4"],
                     x='set', y='value1p', col='trt',
-                    saturation=0.7, linewidth=.1, inner='box',
+                    saturation=0.7, linewidth=.3, inner='box',
                     aspect=.8, log_scale=True)
         # stats
         pairs = [tuple(set(balanced_df.set))]
@@ -235,7 +236,8 @@ for m in glob.glob('../*.tss.10k.gz'):
 
         g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
 
-        # g.set(ylim=(-3.55,2.99))
+        g.set(ylim=(-10, 73))
+
 
         # add mean
         # Iterate over each subplot
@@ -272,6 +274,7 @@ for m in glob.glob('../*.tss.10k.gz'):
 
         g.set_ylabels('H3K27me3')
         g.set_xlabels('')
+        g.set(ylim=(10**-3.5, 10**2.6))
 
         g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
 
