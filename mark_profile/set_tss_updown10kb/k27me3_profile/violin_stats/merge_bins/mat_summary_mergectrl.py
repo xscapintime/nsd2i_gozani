@@ -28,12 +28,12 @@ def split_and_assign(df, row_split, col_split, row_group, col_group):
     return split_df
 
 
-for m in glob.glob('../../*.tss.10k.gz'):
+for m in glob.glob('../*.tss.10k.gz'):
     pn = os.path.basename(m).replace('.tss.10k.gz','').split('.')[0]
     day = os.path.basename(m).replace('.tss.10k.gz','').split('.')[1]
 
     ## load gene sets and ctrls table
-    set_df = pd.read_csv(os.path.join('../../../../../path_vsctrl_filtered_noncrna/ctrlsets_include0/', f'{pn}_ctrl_genes.txt'), sep='\t')
+    set_df = pd.read_csv(os.path.join('../../../../path_vsctrl_filtered_noncrna/ctrlsets_include0/', f'{pn}_ctrl_genes.txt'), sep='\t')
 
 
     ### merge 5 controls and promoters based ref gene
@@ -125,6 +125,7 @@ for m in glob.glob('../../*.tss.10k.gz'):
     # skip zero
     # long_df = long_df[long_df['value'] != 0]
     # long_df['value1p'] = long_df['value'] + 1
+    balanced_df['value1p'] = balanced_df['value'] + 0.001
     balanced_df['logvalue'] = np.log10(balanced_df['value'] + 0.001)
 
     balanced_df['trt'] = pd.Categorical(balanced_df['trt'], categories=[f'vehicle.{day}', f'NSD2i.{day}'], ordered=True)
@@ -136,87 +137,87 @@ for m in glob.glob('../../*.tss.10k.gz'):
 
 
 
-    ## log transfrom
+    # ## log transfrom
 
     for stat_me in ['Mann-Whitney', 'Wilcoxon']:
-        g = sns.catplot(data=balanced_df, kind="violin",palette=["#edb9aa", "#7c84f4"],
-                    x='set', y='logvalue', col='trt',
-                    saturation=0.7, linewidth=.1, inner='box',
-                    aspect=.8)
-        # stats
-        pairs = [tuple(set(balanced_df.set))]
+    #     g = sns.catplot(data=balanced_df, kind="violin",palette=["#edb9aa", "#7c84f4"],
+    #                 x='set', y='logvalue', col='trt',
+    #                 saturation=0.7, linewidth=.1, inner='box',
+    #                 aspect=.8)
+    #     # stats
+    #     pairs = [tuple(set(balanced_df.set))]
 
-        ant = Annotator(None, pairs)
-        kwargs = {
-            'plot_params': { # this takes what normally goes into sns.barplot etc.
-                'x': 'set',
-                'y': 'logvalue',
-                'palette':["#edb9aa", "#7c84f4"]
-            },
-            'annotation_func': 'apply_test', # has three options
-            'configuration': {'test': stat_me, 'text_format' :'full'}, # this takes what normally goes into ant.configure
-            'plot': 'violinplot'
-        }
+    #     ant = Annotator(None, pairs)
+    #     kwargs = {
+    #         'plot_params': { # this takes what normally goes into sns.barplot etc.
+    #             'x': 'set',
+    #             'y': 'logvalue',
+    #             'palette':["#edb9aa", "#7c84f4"]
+    #         },
+    #         'annotation_func': 'apply_test', # has three options
+    #         'configuration': {'test': stat_me, 'text_format' :'full'}, # this takes what normally goes into ant.configure
+    #         'plot': 'violinplot'
+    #     }
 
-        g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
+    #     g.map_dataframe(ant.plot_and_annotate_facets, **kwargs)
 
-        g.set(ylim=(-3.55,2.99))
+    #     g.set(ylim=(-3.55,2.99))
 
-        for ax in g.axes.flat:
-            ax.yaxis.set_major_formatter(mticker.StrMethodFormatter("$10^{{{x:.0f}}}$"))
-            ymin, ymax = ax.get_ylim()
-            # tick_range = np.arange(np.floor(ymin), ymax)
-            tick_range = np.arange(ymin, ymax)
-            # ax.yaxis.set_ticks(tick_range)
-            ax.yaxis.set_ticks([np.log10(x) for p in tick_range for x in np.linspace(10 ** p, 10 ** (p + 1), 10)], minor=True)
+    #     for ax in g.axes.flat:
+    #         ax.yaxis.set_major_formatter(mticker.StrMethodFormatter("$10^{{{x:.0f}}}$"))
+    #         ymin, ymax = ax.get_ylim()
+    #         # tick_range = np.arange(np.floor(ymin), ymax)
+    #         tick_range = np.arange(ymin, ymax)
+    #         # ax.yaxis.set_ticks(tick_range)
+    #         ax.yaxis.set_ticks([np.log10(x) for p in tick_range for x in np.linspace(10 ** p, 10 ** (p + 1), 10)], minor=True)
 
-        # add mean
-        # Iterate over each subplot
-        for ax in g.axes.flat:
-            # Get the data for this subplot
-            data = balanced_df[
-                (balanced_df['trt'] == ax.get_title().split('=')[1].strip()) #&
-                # (plot_df['trt'] == ax.get_title().split('|')[0].split('=')[1].strip())
-            ]
+    #     # add mean
+    #     # Iterate over each subplot
+    #     for ax in g.axes.flat:
+    #         # Get the data for this subplot
+    #         data = balanced_df[
+    #             (balanced_df['trt'] == ax.get_title().split('=')[1].strip()) #&
+    #             # (plot_df['trt'] == ax.get_title().split('|')[0].split('=')[1].strip())
+    #         ]
 
-            # Iterate over each category in the x-axis
-            for category in data['set'].unique():
-                subset = data[data['set'] == category]
-                mean_val = subset['value'].mean()
-                logmean_val = subset['logvalue'].mean()
+    #         # Iterate over each category in the x-axis
+    #         for category in data['set'].unique():
+    #             subset = data[data['set'] == category]
+    #             mean_val = subset['value'].mean()
+    #             logmean_val = subset['logvalue'].mean()
 
-                # Get the position of the category on the x-axis
-                x_position = data['set'].unique().tolist().index(category)
+    #             # Get the position of the category on the x-axis
+    #             x_position = data['set'].unique().tolist().index(category)
 
-                # Draw a short horizontal line at the mean value
-                ax.plot([x_position - 0.2, x_position + 0.2], [logmean_val, logmean_val],
-                    color='black', linestyle=':', linewidth=1.5)
+    #             # Draw a short horizontal line at the mean value
+    #             ax.plot([x_position - 0.2, x_position + 0.2], [logmean_val, logmean_val],
+    #                 color='black', linestyle=':', linewidth=1.5)
 
-                # Annotate the mean value
-                ax.text(
-                    x=x_position,
-                    y=logmean_val,
-                    s=f'mean={mean_val:.2f}',
-                    color='black',
-                    ha='center',
-                    va='bottom',
-                    fontsize='small'
-                )
+    #             # Annotate the mean value
+    #             ax.text(
+    #                 x=x_position,
+    #                 y=logmean_val,
+    #                 s=f'mean={mean_val:.2f}',
+    #                 color='black',
+    #                 ha='center',
+    #                 va='bottom',
+    #                 fontsize='small'
+    #             )
 
-        g.set_ylabels('H3K27me3 (log scale)')
-        g.set_xlabels('')
+    #     g.set_ylabels('H3K27me3 (log scale)')
+    #     g.set_xlabels('')
 
-        g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
+    #     g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
 
-        plt.savefig(f'{pn}_{day}_tsscentral5kbp_k27me3_log_{stat_me}.pdf', bbox_inches='tight')
-        plt.close()
+    #     plt.savefig(f'{pn}_{day}_tsscentral5kbp_k27me3_log_{stat_me}.pdf', bbox_inches='tight')
+    #     plt.close()
 
 
         # no log transfrom
         g = sns.catplot(data=balanced_df, kind="violin",palette=["#edb9aa", "#7c84f4"],
-                    x='set', y='value', col='trt',
+                    x='set', y='value1p', col='trt',
                     saturation=0.7, linewidth=.1, inner='box',
-                    aspect=.8)
+                    aspect=.8, log_scale=True)
         # stats
         pairs = [tuple(set(balanced_df.set))]
 
@@ -224,7 +225,7 @@ for m in glob.glob('../../*.tss.10k.gz'):
         kwargs = {
             'plot_params': { # this takes what normally goes into sns.barplot etc.
                 'x': 'set',
-                'y': 'value',
+                'y': 'value1p',
                 'palette':["#edb9aa", "#7c84f4"]
             },
             'annotation_func': 'apply_test', # has three options
@@ -274,5 +275,5 @@ for m in glob.glob('../../*.tss.10k.gz'):
 
         g.fig.suptitle(f'{pn}'.split('.')[0], y=1.02, fontsize=12)
 
-        plt.savefig(f'{pn}_{day}tsscentral5kbp_k27me3_{stat_me}.pdf', bbox_inches='tight')
+        plt.savefig(f'logscale_raw/{pn}_{day}_tsscentral5kbp_k27me3_{stat_me}.pdf', bbox_inches='tight')
         plt.close()
