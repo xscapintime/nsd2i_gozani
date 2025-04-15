@@ -70,6 +70,15 @@ for m in glob.glob('../*.tss.10k.gz'):
     long_df['logvalue'] = np.log10(long_df['value'])
 
 
+
+    ## print data points 20250415
+    # print(pn)
+    for i in long_df['set'].unique():
+        for j in long_df['trt'].unique():
+            print(pn, i, j, long_df[(long_df['set'] == i) & (long_df['trt'] == j)].shape[0])
+            # print('---')
+            
+
     ## plot
     # g = sns.catplot(data=long_df, kind="violin",palette=["#4682B4", "#CDC9C9"],
     #             x='set', y='value', col='trt',
